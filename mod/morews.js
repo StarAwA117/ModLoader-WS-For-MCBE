@@ -1,6 +1,6 @@
 const WebSocket = require("ws");
 const { v4: uuidv4 } = require("uuid");
-const Command = require("../lib/command");
+const Command = require("../lib/command.js");
 
 // 扩展 WebSocket 连接类
 // 允许客户端同时连接到多个外部 WebSocket 服务端，实现消息的双向转发

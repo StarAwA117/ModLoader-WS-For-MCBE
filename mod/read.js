@@ -1,5 +1,5 @@
 const readline = require("readline");
-const Current = require("../lib/current");
+const Current = require("../lib/current.js");
 
 // 终端读取类
 // 监听标准输入，提供终端级别的命令执行和消息发送功能
@@ -27,7 +27,9 @@ class Read {
 
 		// 游戏命令转发（以 / 开头）
 		if (input.startsWith("/")) {
-			Current.client.runCommand(input);
+			Current.client.runCommand(input).then(data => {
+				console.log(`CMD ${data.body.statusCode} -> ${data.body.statusMessage ? data.body.statusMessage : "Null"}`);
+			});
 			return;
 		}
 

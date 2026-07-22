@@ -111,7 +111,7 @@ ModLoader-WS-For-MCBE/
 命令定义与参数解析。支持链式调用构建命令。
 
 ```js
-const Command = require("../lib/command");
+const Command = require("../lib/command.js");
 
 const cmd = Command.create("greet", "打招呼")
   .addString("target")
@@ -157,27 +157,42 @@ false
 
 ### Utils
 
-WebSocket 工具类，封装 Minecraft 基岩版协议。构造时自动将 `runCommand`、`subscribe`、`tellAll`、`tell` 四个方法挂载到 `client` 对象上。
+WebSocket 工具类，封装 Minecraft 基岩版协议。构造时自动将多个实用方法挂载到 `client` 对象上。
 
 ```js
-const Utils = require("../lib/utils");
+const Utils = require("../lib/utils.js");
 const utils = new Utils(ws);
-// 此后可直接通过 client.runCommand(...) 调用
+// 此后可直接通过 client.runCommand(...)、client.tell(...) 等调用
 ```
+
+#### 静态方法
+
+| 方法 | 参数 | 返回值 | 说明 |
+|---|---|---|---|
+| `setMulti(multimap, key, value)` | `Map, string, any` | `void` | 向 MultiMap 添加键值对（一个 key 对应多个 value） |
+| `splitByBytes(str, maxBytes)` | `string, number` | `string[]` | 按字节长度分割字符串，用于消息自动分割 |
 
 #### 挂载到 client 的方法
 
 | 方法 | 签名 | 说明 |
 |---|---|---|
-| `runCommand` | `(command: string, callback?: Function) => boolean` | 执行游戏命令。命令字节长度 >= 462 时返回 `false`（游戏限制，超出会导致客户端断开连接）。可选 `callback` 在收到命令响应时被调用 |
-| `subscribe` | `(event: string, callback?: Function) => boolean` | 订阅游戏事件，同一事件可订阅多次。回调签名为 `(data) => {}`，`data.body` 包含事件数据 |
-| `tellAll` | `(msg: string) => void` | 向所有玩家广播消息（通过 `/me` 命令），消息按 420 字节自动分割 |
+| `sendCommand` | `(command: string) => Promise<void>` | 静默执行命令，不返回结果，不抛出错误 |
+| `runCommand` | `(command: string) => Promise<object>` | 执行命令并返回响应数据（`data.body`）。命令字节长度 > 461 时抛出错误 |
+| `subscribe` | `(event: string, callback?: Function) => void` | 订阅游戏事件，同一事件可多次订阅。回调签名为 `(data) => {}`，`data.body` 包含事件数据 |
+| `unsubscribe` | `(event: string) => void` | 取消订阅游戏事件并移除所有回调 |
+| `tellAll` | `(msg: string) => void` | 向所有玩家广播消息（通过 `me` 命令），消息按 420 字节自动分割 |
 | `tell` | `(msg: string, target?: string, isPrefix?: boolean) => void` | 向指定目标发送 `tellraw` 消息。`target` 默认 `"@a"`；`isPrefix` 默认 `true`，添加 `* 外部` 前缀。消息按 300 字节自动分割 |
+| `getLocation` | `(target: string) => Promise<{x, y, z, dimension} \| null>` | 获取目标位置及维度 |
+| `getPosition` | `(target: string) => Promise<{x, y, z} \| null>` | 获取目标坐标 |
+| `getDimension` | `(target: string) => Promise<string \| null>` | 获取目标维度 |
+| `getInventory` | `(target: string) => Promise<object \| undefined>` | 获取目标物品栏数据 |
+| `getLocolPlayer` | `() => Promise<string \| undefined>` | 获取本地玩家名称 |
+| `closechat` | `() => Promise<boolean>` | 关闭聊天框，返回状态码是否为 0 |
 
 常用事件名：
 
 | 事件名 | 说明 |
-|---|---|
+|---|---|---|
 | `PlayerMessage` | 玩家发送消息，`data.body` 含 `sender`、`message`、`type` |
 | `PlayerJoin` | 玩家加入游戏 |
 | `PlayerLeave` | 玩家离开游戏 |
@@ -189,9 +204,23 @@ const utils = new Utils(ws);
 
 | 方法 | 签名 | 说明 |
 |---|---|---|
-| `runCommandUnsafe` | `(command: string, callback?: Function) => void` | 不校验长度的命令执行，用于特殊场景（如超长文本触发断开） |
+| `sendCommandUnsafe` | `(command: string) => Promise<string>` | 不校验长度的命令执行，返回 UUID，用于特殊场景 |
+| `sendCommandWithCheck` | `(command: string) => Promise<string>` | 校验参数和命令长度后执行，返回 UUID |
+| `sendCommand` | `(command: string) => Promise<void>` | 静默执行命令，不返回结果 |
+| `runCommand` | `(command: string) => Promise<object>` | 执行命令并返回响应数据 |
+| `subscribe` | `(event: string, callback?: Function) => void` | 订阅游戏事件 |
+| `unsubscribe` | `(event: string) => void` | 取消订阅游戏事件 |
 | `subscribePackage` | `(uuid: string, callback: Function) => void` | 订阅所有游戏返回包（底层管理用），回调签名为 `(data) => {}` |
 | `unsubscribePackage` | `(uuid: string) => void` | 取消订阅游戏返回包 |
+| `tellAll` | `(msg: string) => void` | 广播消息 |
+| `tell` | `(msg: string, target?: string, isPrefix?: boolean) => void` | 发送 tellraw 消息 |
+| `getLocation` | `(target: string) => Promise<{x, y, z, dimension} \| null>` | 获取目标位置及维度 |
+| `getPosition` | `(target: string) => Promise<{x, y, z} \| null>` | 获取目标坐标 |
+| `getDimension` | `(target: string) => Promise<string \| null>` | 获取目标维度 |
+| `getInventory` | `(target: string) => Promise<object \| undefined>` | 获取目标物品栏数据 |
+| `getLocolPlayer` | `() => Promise<string \| undefined>` | 获取本地玩家名称 |
+| `closechat` | `() => Promise<boolean>` | 关闭聊天框 |
+| `onMessage` | `(data: object) => void` | 接收并分发消息到对应回调（内部使用） |
 | `destroy` | `() => void` | 销毁实例，清空所有回调 Map |
 
 ---
@@ -201,7 +230,7 @@ const utils = new Utils(ws);
 全局状态单例，存储当前主客户端引用和运行时数据。所有方法和属性均为 `static`。
 
 ```js
-const Current = require("../lib/current");
+const Current = require("../lib/current.js");
 
 // 存储定时器 ID
 Current.set("loop", setInterval(() => { ... }, 1000));
@@ -225,7 +254,7 @@ if (Current.has("loop")) clearInterval(Current.get("loop"));
 异步权限管理类，读写 `permission.json` 文件。所有方法均为 `static async`。
 
 ```js
-const PermissionManager = require("../lib/permission");
+const PermissionManager = require("../lib/permission.js");
 
 const level = await PermissionManager.query("Steve");
 // -1 (Blocker) | 0 (Normal) | 1 (User) | 2 (OP) | 3 (Owner)
@@ -249,7 +278,7 @@ await PermissionManager.remove("op", "Notch");
 共享日志实例，通过 `shared` 模块直接引用。
 
 ```js
-const shared = require("../lib/shared");
+const shared = require("../lib/shared.js");
 
 shared.logger.info("服务启动");
 shared.logger.error("连接失败");
@@ -272,6 +301,123 @@ shared.messageLogger.log("收到消息");
 | `warning(message)` | 警告级别（黄色） |
 | `error(message)` | 错误级别（红色） |
 | `debug(message)` | 调试级别（紫色） |
+
+---
+
+---
+
+### Player
+
+玩家处理类，管理客户端连接的所有玩家实例。自动通过 `/list` 命令轮询获取在线玩家列表。
+
+```js
+const Player = require("../lib/player.js");
+
+// 初始化玩家管理
+Player.init(client);
+
+// 手动获取玩家列表
+await Player.getPlayers(client);
+
+// 销毁客户端所有玩家
+Player.destroyAll(client);
+```
+
+#### 静态方法
+
+| 方法 | 参数 | 返回值 | 说明 |
+|---|---|---|---|
+| `init(client)` | `WebSocket` | `void` | 初始化客户端的玩家管理器，创建 `client.players` Map 并启动轮询 |
+| `getPlayers(client)` | `WebSocket` | `Promise<void>` | 执行 `/list` 命令获取在线玩家，自动更新 `client.players`（增删） |
+| `destroyAll(client)` | `WebSocket` | `void` | 销毁该客户端所有 Player 实例并停止轮询 |
+
+#### 实例属性
+
+| 属性 | 类型 | 说明 |
+|---|---|---|
+| `name` | `string \| null` | 玩家名称 |
+| `client` | `WebSocket \| null` | 所属客户端连接 |
+| `properties` | `object` | 自定义属性存储（可用于 Mod 存储玩家数据） |
+
+#### 实例方法
+
+| 方法 | 说明 |
+|---|---|
+| `destroy()` | 销毁玩家实例，从 `client.players` 中移除并清空引用 |
+
+---
+
+### ClientModManager
+
+客户端 Mod 管理器，每个客户端连接实例化一次，负责加载、实例化和管理该连接的所有客户端 Mod。
+
+```js
+const { ClientModManager } = require("../lib/mods.js");
+
+// 静态加载所有配置的客户端 Mod
+ClientModManager.load();
+
+// 创建管理器实例（在客户端连接时调用）
+const manager = new ClientModManager(client);
+
+// 销毁管理器
+manager.destroy();
+```
+
+#### 静态方法
+
+| 方法 | 参数 | 返回值 | 说明 |
+|---|---|---|---|
+| `load()` | - | `void` | 从 `config.js` 读取 `mods.client` 路径并 require 加载所有客户端 Mod 类 |
+
+#### 静态属性
+
+| 属性 | 类型 | 说明 |
+|---|---|---|
+| `loadedMod` | `object` | 已加载的 Mod 类定义 `{ 名称: ModClass }` |
+
+#### 实例属性
+
+| 属性 | 类型 | 说明 |
+|---|---|---|
+| `client` | `WebSocket` | 所属客户端连接 |
+| `modInstances` | `object` | 已实例化的 Mod `{ 名称: 实例 }`，同时挂载到 `client[名称]` |
+| `commands` | `object` | 按权限分类的命令列表 `{ normal: [...], user: [...], op: [...], owner: [...] }` |
+
+#### 实例方法
+
+| 方法 | 参数 | 返回值 | 说明 |
+|---|---|---|---|
+| `destroy()` | - | `void` | 销毁所有 Mod 实例，调用各 Mod 的 `destroy()` 方法并清空引用 |
+
+---
+
+### ServerModManager
+
+服务端 Mod 管理器，静态单例，管理全局服务端级别的 Mod（不随客户端连接创建）。
+
+```js
+const { ServerModManager } = require("../lib/mods.js");
+
+// 静态加载所有配置的服务端 Mod（启动时自动调用）
+ServerModManager.load();
+
+// 销毁所有服务端 Mod
+ServerModManager.destroy();
+```
+
+#### 静态方法
+
+| 方法 | 参数 | 返回值 | 说明 |
+|---|---|---|---|
+| `load()` | - | `void` | 从 `config.js` 读取 `mods.server` 路径并 require 加载，同时调用 Mod 的 `start()` 方法 |
+| `destroy()` | - | `void` | 遍历所有已加载的服务端 Mod，调用各 Mod 的 `destroy()` 方法并清空 |
+
+#### 静态属性
+
+| 属性 | 类型 | 说明 |
+|---|---|---|
+| `loadedMod` | `object` | 已加载的 Mod 类定义 `{ 名称: ModClass }` |
 
 ---
 

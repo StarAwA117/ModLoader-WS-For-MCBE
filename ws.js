@@ -1,10 +1,10 @@
 const WebSocket = require("ws");
-const shared = require("./lib/shared");
-const { wsConfig, track } = require("./config");
-const Utils = require("./lib/utils");
-const Player = require("./lib/player");
-const Current = require("./lib/current")
-const { ClientModManager, ServerModManager } = require("./lib/mods");
+const shared = require("./lib/shared.js");
+const { wsConfig, track } = require("./config.js");
+const Utils = require("./lib/utils.js");
+const Player = require("./lib/player.js");
+const Current = require("./lib/current.js");
+const { ClientModManager, ServerModManager } = require("./lib/mods.js");
 
 // 创建 WebSocket 服务端，监听端口 wsConfig.port
 const server = new WebSocket.Server({

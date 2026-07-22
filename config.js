@@ -24,11 +24,11 @@ const mods = {
 - Mod 配置示例
 const mods = {
 	client: {
-		"MoreWS": "../mod/morews",
-		"PermissionCommands": "../mod/permission"
+		"MoreWS": "../mod/morews.js",
+		"PermissionCommands": "../mod/permission.js"
 	},
 	server: {
-		"read": "../mod/read"
+		"read": "../mod/read.js"
 	}
 };
 */

@@ -1,5 +1,5 @@
-const PermissionManager = require("../lib/permission");
-const Command = require("../lib/command");
+const PermissionManager = require("../lib/permission.js");
+const Command = require("../lib/command.js");
 
 // 权限管理命令类
 // 提供游戏内权限查询、添加、删除的命令接口
