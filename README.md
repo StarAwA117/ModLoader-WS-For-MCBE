@@ -16,10 +16,10 @@ npm install ws uuid
 node ws.js
 ```
 
-服务器启动后监听 19132 端口，MCBE 客户端在本地世界可通过如下命令连接。
+服务器启动后监听 8080 端口，MCBE 客户端在本地世界可通过如下命令连接。
 
 ```
-/connect 127.0.0.1:19132
+/connect 127.0.0.1:8080
 ```
 
 ## 配置
@@ -28,6 +28,8 @@ node ws.js
 
 | 选项 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
+| `wsConfig.name` | `string` | `ModLoader` | 服务端外显名称 |
+| `wsConfig.port` | `number` | `8080` | 端口号 |
 | `track` | `boolean` | `false` | 调试日志开关 |
 | `commandPrefix` | `string` | `"!"` | 聊天中触发命令的前缀字符 |
 | `mods.client` | `object` | `{}` | 客户端 Mod 注册表 `{ 名称: require路径 }` |
