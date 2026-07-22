@@ -107,7 +107,7 @@ process.on("SIGINT", async () => {
 		// 通知所有已连接客户端并强制断开
 		server.clients.forEach((client) => {
 			client.tellAll(`§c${wsConfig.name} §f关闭连接`);
-			client.runCommand("/closewebsocket");
+			client.sendCommand("/closewebsocket");
 			client.close();
 		});
 
