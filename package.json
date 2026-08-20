@@ -1,0 +1,20 @@
+{
+	"name": "starws",
+	"version": "1.0.0",
+	"type": "module",
+	"bin": {
+		"starws": "ws.js"
+	},
+	"scripts": {
+		"start": "node ws.js"
+	},
+	"dependencies": {
+		"ws": "^8.16.0",
+		"uuid": "^9.0.0",
+		"midi-file": "^1.2.0",
+		"openai": "^4.0.0",
+		"node-napcat-ts": "^1.0.0",
+		"profanity-guard": "^1.0.2",
+		"sensitive-word-tool": "^1.0.0"
+	}
+}

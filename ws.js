@@ -1,52 +1,87 @@
-const WebSocket = require("ws");
-const shared = require("./lib/shared.js");
-const { wsConfig, track } = require("./config.js");
-const Utils = require("./lib/utils.js");
-const Player = require("./lib/player.js");
-const Current = require("./lib/current.js");
-const { ClientModManager, ServerModManager } = require("./lib/mods.js");
+import WebSocket, { WebSocketServer } from "ws";
+import { v4 as uuidv4 } from "uuid";
+import * as shared from "./lib/shared.js";
+import { closeLogStreams } from "./lib/logger.js";
+import { wsConfig } from "./config.js";
+import Utils from "./lib/utils.js";
+import Current from "./lib/current.js";
+import { ClientModManager, ServerModManager } from "./lib/mods.js";
 
 // 创建 WebSocket 服务端，监听端口 wsConfig.port
-const server = new WebSocket.Server({
+const server = new WebSocketServer({
 	port: wsConfig.port
 });
 
+// 立即注册错误监听，避免端口占用等错误在异步加载期间未被捕获
+server.on("error", (error) => {
+	shared.logger.error(`服务器错误: ${error.message}`);
+	shared.logger.debug(error.stack);
+});
+
 // 加载服务端 Mod 和客户端 Mod 的静态定义
-ServerModManager.load();
-ClientModManager.load();
+await ServerModManager.load();
+await ClientModManager.load();
 shared.logger.info("服务器已启动");
 
 // 处理客户端连接
 server.on("connection", (ws) => {
+	// 获取客户端 IP
+	const clientIP = ws._socket.remoteAddress;
+	shared.logger.info(`客户端 ${clientIP} 已连接`);
+
+	// 分配唯一 ID，用于客户端 Mod 存储和事件总线隔离
+	ws.id = uuidv4();
+
 	// 为当前客户端绑定工具方法（runCommand, subscribe, tell 等）
 	ws.utils = new Utils(ws);
-	// 实例化客户端 Mod，注入当前连接
-	const clientMod = new ClientModManager(ws);
-	// 初始化 Player 记录
-	Player.init(ws);
-	// 广播连接通知
-	ws.tellAll(`§a${wsConfig.name} §f已连接`);
 
 	// 记录第一个连接的客户端为主客户端
-	if (!Current.client) {
+	const isMainClient = !Current.client;
+	if (isMainClient) {
 		Current.client = ws;
 		shared.logger.info("主客户端已连接");
 	}
 
+	// 实例化客户端 Mod，注入当前连接
+	const clientMod = new ClientModManager(ws);
+	ws.clientMod = clientMod;
+	Current.clientMods.set(ws, clientMod);
+
+	// 通知服务端 Mod 客户端已连接
+	ServerModManager.onClientConnect(ws, isMainClient);
+
+	// 广播连接通知
+	ws.tell(`§e${wsConfig.name} | §fSystem > §i已连接`);
+
 	// 处理客户端消息
 	ws.on("message", (message) => {
+		// 仅 JSON 解析需捕获，非 JSON 消息直接忽略；
+		// Mod 分发调用各自内部已有 try/catch，不应被外层吞掉，便于排查
+		let data;
 		try {
-			// 将消息解析为 JSON 后分发给工具类处理
-			const data = JSON.parse(String(message));
-			ws.utils.onMessage(data);
+			data = JSON.parse(String(message));
 		} catch {
 			// 解析失败则忽略（非 JSON 消息）
 			return;
 		}
+
+		// 将消息解析为 JSON 后分发给工具类处理
+		ws.utils.onMessage(data);
+
+		// 通知客户端 Mod 收到消息
+		clientMod.callModMethod("onPocket", data);
+
+		// 通知服务端 Mod 收到消息
+		ServerModManager.onMessage(ws, data);
 	});
 
 	// 处理客户端断开连接
 	ws.on("close", () => {
+		shared.logger.info(`客户端 ${clientIP} 连接已关闭`);
+
+		// 通知服务端 Mod 客户端已断开连接
+		ServerModManager.onClientDisconnect(ws, ws === Current.client);
+
 		// 若为主客户端断开，重置主客户端状态
 		if (ws === Current.client) {
 			Current.reset();
@@ -54,9 +89,13 @@ server.on("connection", (ws) => {
 		}
 
 		// 销毁该客户端的所有 Mod 实例
+		Current.clientMods.delete(ws);
 		clientMod.destroy();
-		// 清除 Player 记录
-		Player.destroyAll(ws);
+
+		// 清理工具类回调映射，防止内存泄漏
+		if (ws.utils && typeof ws.utils.destroy === "function") {
+			ws.utils.destroy();
+		}
 
 		// 移除所有事件监听器，防止内存泄漏
 		ws.removeAllListeners();
@@ -65,57 +104,60 @@ server.on("connection", (ws) => {
 	// 处理客户端错误
 	ws.on("error", (error) => {
 		if (ws === Current.client) {
-			shared.logger.error("主客户端错误");
-			if (track) shared.logger.debug(error.message);
+			shared.logger.error(`主客户端错误: ${error.message}`);
+			shared.logger.debug(error.stack);
 		}
 	});
 });
 
-// 服务端错误处理
-server.on("error", (error) => {
-	shared.logger.error("服务器错误");
-	if (track) shared.logger.debug(error.message);
-});
-
 // 关闭函数
 // 依次销毁 Mod、关闭 WebSocket 服务端
-function destroy() {
+// 防重入：重复调用（如多次 SIGINT）直接忽略，避免反复启动 10s 硬超时
+let destroying = false;
+async function destroy() {
+	if (destroying) return;
+	destroying = true;
+
 	shared.logger.info("正在关闭服务端 Mod...");
 	ServerModManager.destroy();
+	shared.logger.info("服务端 Mod 已关闭");
+
+	shared.logger.info("正在通知客户端断开连接...");
+	server.clients.forEach((client) => {
+		client.tell(`§c${wsConfig.name} | §fSystem > §i已关闭连接`);
+		client.runCommand("/closewebsocket").catch(() => {});
+		client.close();
+	});
+	shared.logger.info("客户端通知已完成");
 
 	shared.logger.info("正在关闭服务器...");
 
-	// 返回 Promise，5 秒超时后强制拒绝
-	return new Promise((resolve, reject) => {
-		const timer = setTimeout(() => {
-			shared.logger.warning("服务器关闭失败");
-			reject(new Error("服务器关闭失败"))
-		}, 5000);
+	const hardTimeout = new Promise((_, reject) => {
+		setTimeout(() => {
+			shared.logger.warning("服务器关闭超时，强制退出");
+			reject(new Error("服务器关闭超时"));
+		}, 10000);
+	});
 
+	const close = new Promise((resolve) => {
 		server.close(() => {
-			clearTimeout(timer);
 			shared.logger.info("服务器已关闭");
-			resolve("服务器已关闭");
+			resolve();
 		});
 	});
+
+	try {
+		await Promise.race([close, hardTimeout]);
+	} catch {
+		shared.logger.warning("服务器关闭异常，正在强制退出");
+	}
 }
 
-// 信号处理：收到 SIGINT 时关闭
+// 信号处理
 process.on("SIGINT", async () => {
-	// 仅在直接运行此文件时处理（避免被 loader 引入时重复执行）
-	if (require.main === module) {
-		// 通知所有已连接客户端并强制断开
-		server.clients.forEach((client) => {
-			client.tellAll(`§c${wsConfig.name} §f关闭连接`);
-			client.sendCommand("/closewebsocket");
-			client.close();
-		});
-
-		await destroy();
-
-		shared.logger.info("程序进程结束");
-		process.exit(0);
-	}
+	shared.logger.info("正在执行正常关闭...");
+	await destroy();
+	closeLogStreams();
+	shared.logger.info("程序进程结束");
+	process.exit(0);
 });
-
-module.exports = { destroy }
