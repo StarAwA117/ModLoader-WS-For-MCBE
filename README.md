@@ -83,8 +83,7 @@ ws/
 |------|------|------|
 | `!t:help [页码]` | normal | 分页查看全部可用命令（每页 5 条） |
 | `!t:search <关键词> [页码]` | normal | 搜索命令（按名称/描述匹配） |
-| `!p:q` | normal | 查询自身权限等级 |
-| `!p:query <账号>` | normal | 查询指定账号的权限等级 |
+| `!p:query [账号]` | normal | 查询权限等级（不带参数查询自身） |
 | `!t:ping` | owner | 检测与服务器的延迟 |
 | `!t:time` | owner | 查看当前时间（北京时间） |
 
@@ -97,8 +96,7 @@ ws/
 | `!t:cmd <基岩版命令>` | op | 执行基岩版命令并显示返回状态 |
 | `!t:start` | owner | 重新开始 SAPI 轮询 |
 | `!t:move` | owner | 将当前客户端设为主客户端 |
-| `!t:reloadmod <Mod 名称>` | owner | 重载指定客户端 Mod |
-| `!t:reload` | owner | 重载当前客户端的全部 Mod（不断开连接） |
+| `!t:reload [Mod 名称]` | owner | 重载客户端 Mod（带名称重载单个，不带重载全部客户端） |
 | `!t:mod` | owner | 显示所有已加载的客户端 Mod |
 | `!t:exec <命令>` | owner | 在服务器终端执行系统命令（危险，慎用） |
 
@@ -134,7 +132,7 @@ ws/
 | `!m:next` | user | 切换到下一首音乐 |
 | `!m:random` | user | 随机播放音乐 |
 | `!m:loop <next/random/single> [歌名]` | user | 设置循环播放模式（single 模式可指定歌名） |
-| `!m:stop <music/loop/all>` | user | 停止播放（仅音乐 / 仅循环 / 全部） |
+| `!m:stop [music/loop/all]` | user | 停止播放（默认全部，可选仅音乐 / 仅循环） |
 
 ### 🏗️ Litematic 建筑导入
 
@@ -179,8 +177,7 @@ ws/
 |------|------|------|
 | `!f:function <文件路径>` | op | 运行 .mcfunction 文件 |
 | `!f:loop <文件路径> <循环名称> <间隔秒>` | op | 循环运行 Function |
-| `!f:stop <循环名称>` | op | 停止指定循环 |
-| `!f:stopAll` | op | 停止所有循环 |
+| `!f:stop [循环名称]` | op | 停止循环（不带参数停止所有） |
 
 ### 🛡️ 权限管理
 

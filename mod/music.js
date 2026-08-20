@@ -217,12 +217,12 @@ export default class MusicDisplay {
 					}
 				}),
 
-				Command.create("m:stop", "停止播放")
-				.addEnum(["music", "loop", "all"], "停止范围 (music=仅音乐 loop=仅循环 all=全部)")
+				Command.create("m:stop", "停止播放（不带参数停止全部）")
+				.addOptionalEnum(["music", "loop", "all"], "停止范围 (music=仅音乐 loop=仅循环 all=全部，默认 all)")
 				.setFunc((_, mode) => {
+					if (mode === undefined || mode === "all") this.stopAll();
 					if (mode === "music") this.stop();
 					if (mode === "loop") this.stopLoop();
-					if (mode === "all") this.stopAll();
 				})
 			]
 		};

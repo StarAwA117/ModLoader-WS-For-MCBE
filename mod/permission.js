@@ -13,19 +13,13 @@ export default class PermissionCommands {
 		return {
 			// 普通命令：权限查询
 			normal: [
-				Command.create("p:q", "查询自身权限等级")
-				.setFunc(async (commander) => {
-					// 查询自身权限等级
-					const permission = await PermissionManager.query(commander);
-					this.client.tell(`§ePermission | §fQuery > §i${commander} 权限: ${permission}`, commander);
-				}),
-
-				Command.create("p:query", "查询指定账号权限等级")
-				.addString("账号", true)
+				Command.create("p:query", "查询权限等级（不带参数查询自身）")
+				.addOptionalString("账号")
 				.setFunc(async (commander, queried) => {
-					// 查询指定账号的权限等级
-					const permission = await PermissionManager.query(queried);
-					this.client.tell(`§ePermission | §fQuery > §i${queried} 权限: ${permission}`, commander);
+					// 无参数查询自身权限；带参数查询指定账号
+					const target = queried || commander;
+					const permission = await PermissionManager.query(target);
+					this.client.tell(`§ePermission | §fQuery > §i${target} 权限: ${permission}`, commander);
 				})
 			],
 

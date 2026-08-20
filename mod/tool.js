@@ -215,26 +215,24 @@ export default class Tool {
 					this.client.tellAll(`§eTool | §fMove > §i主客户端已切换至 ${sender}`);
 				}),
 
-				Command.create("t:reloadmod", "重载指定客户端 Mod")
-				.addString("Mod 名称", true)
+				Command.create("t:reload", "重载客户端 Mod（带名称重载单个，不带重载全部客户端）")
+				.addOptionalString("Mod 名称")
 				.setFunc(async (sender, modName) => {
 					const client = this.client;
-					const manager = client.clientMod;
-					if (!manager || typeof manager.reload !== "function") {
-						client.tell("§cTool | §fError > §i无法重载：客户端 Mod 管理器不可用", sender);
-						return;
-					}
-					const result = await manager.reload(modName);
-					client.tellAll(`§eTool | §fReload > §i${result.message}`);
-				}),
-
-				Command.create("t:reload", "重载所有当前客户端的全部 Mod 实例（不断开连接）")
-				.setFunc(async (sender) => {
-					const client = this.client;
-					const result = await ClientModManager.reloadAllClients();
-					client.tellAll(`§eTool | §fReload > §i客户端 Mod 全量重载完成 成功: ${result.success.length || 0} 失败: ${result.failed.length || 0}`);
-					if (result.failed.length > 0) {
-						result.failed.forEach(f => client.tellAll(`§cTool | §fError > §i${f}`));
+					if (modName) {
+						const manager = client.clientMod;
+						if (!manager || typeof manager.reload !== "function") {
+							client.tell("§cTool | §fError > §i无法重载：客户端 Mod 管理器不可用", sender);
+							return;
+						}
+						const result = await manager.reload(modName);
+						client.tellAll(`§eTool | §fReload > §i${result.message}`);
+					} else {
+						const result = await ClientModManager.reloadAllClients();
+						client.tellAll(`§eTool | §fReload > §i客户端 Mod 全量重载完成 成功: ${result.success.length || 0} 失败: ${result.failed.length || 0}`);
+						if (result.failed.length > 0) {
+							result.failed.forEach(f => client.tellAll(`§cTool | §fError > §i${f}`));
+						}
 					}
 				}),
 

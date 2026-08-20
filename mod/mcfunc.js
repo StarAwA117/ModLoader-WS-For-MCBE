@@ -30,15 +30,10 @@ export default class MCFunc {
 					this.loop(filePath, name, interval);
 				}),
 
-				Command.create("f:stop", "停止指定循环")
-				.addString("循环名称", true)
+				Command.create("f:stop", "停止循环（不带参数停止所有）")
+				.addOptionalString("循环名称")
 				.setFunc((_, name) => {
 					this.stop(name);
-				}),
-
-				Command.create("f:stopAll", "停止所有循环")
-				.setFunc((_) => {
-					this.stop();
 				})
 			]
 		};
@@ -130,7 +125,7 @@ export default class MCFunc {
 	// 停止循环
 	// loopName: 指定循环名停止，为 null 时停止全部
 	stop(loopName = null) {
-		if (loopName === null) {
+		if (loopName === null || loopName === undefined) {
 			// 停止所有循环
 			for (let loop of this.loops.values()) {
 				clearInterval(loop);
