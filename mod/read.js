@@ -167,7 +167,7 @@ export default class Read {
 			.setFunc((_) => {
 				Read.startSpam((spam.adInterval || 60000), () => {
 					Current.client.tellAll(`${spam.ad[Math.floor(Math.random() * spam.ad.length)]}`);
-				}, "正在为客户端推送 LUMINE AD…");
+				}, "正在为客户端推送 AD…");
 			}),
 
 			Command.create("c:repeat", "刷屏指定内容")
@@ -273,7 +273,7 @@ ${text}`);
 
 	// 销毁方法 - 关闭 readline 接口
 	// 必须先 close 再 removeAllListeners：readline 的 close 会清理 stdin 上的 data 监听器
-	// 若先 removeAllListeners 清空内部回调，close 无法移除 stdin 监听，reload 后会出现重复回显（如输入 1 显示 11）
+	// 若先 removeAllListeners 清空内部回调，close 无法移除 stdin 监听，reload 后会出现重复回显
 	static onDestroy() {
 		if (this.rl) {
 			this.rl.close();
