@@ -9,12 +9,13 @@
 		"start": "node ws.js"
 	},
 	"dependencies": {
-		"ws": "^8.16.0",
-		"uuid": "^9.0.0",
 		"midi-file": "^1.2.0",
+		"node-napcat-ts": "^0.4.25",
 		"openai": "^4.0.0",
-		"node-napcat-ts": "^1.0.0",
+		"pngjs": "^7.0.0",
 		"profanity-guard": "^1.0.2",
-		"sensitive-word-tool": "^1.0.0"
+		"sensitive-word-tool": "^1.0.0",
+		"uuid": "^9.0.0",
+		"ws": "^8.16.0"
 	}
 }
