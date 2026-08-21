@@ -33,11 +33,10 @@ onUnmounted(() => clearInterval(timer));
 	<div class="card">
 		<div class="card-header">
 			<h2>已连接客户端</h2>
-			<span class="badge badge-green">{{ clients.length }} 个</span>
+			<span class="badge">{{ clients.length }} 个</span>
 		</div>
 
 		<div v-if="clients.length === 0" class="empty-state">
-			<div class="icon">🖥️</div>
 			<p>暂无客户端连接</p>
 		</div>
 
@@ -45,14 +44,14 @@ onUnmounted(() => clearInterval(timer));
 			<div
 				v-for="c in clients"
 				:key="c.id"
-				style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--ctp-mantle); border-radius: 8px; margin-bottom: 8px;"
+				style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-input); border-radius: 8px; margin-bottom: 8px;"
 			>
 				<div style="flex: 1;">
 					<div style="font-weight: 500; font-size: 14px;">
 						{{ c.id.slice(0, 8) }}...
-						<span v-if="c.isMain" class="badge badge-blue" style="margin-left: 6px;">主客户端</span>
+						<span v-if="c.isMain" class="badge" style="margin-left: 6px;">主客户端</span>
 					</div>
-					<div style="font-size: 12px; color: var(--ctp-overlay1); margin-top: 2px;">
+					<div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
 						IP: {{ c.ip }}
 					</div>
 				</div>

@@ -58,12 +58,12 @@ onMounted(refresh);
 			<input
 				v-model="input"
 				type="text"
-				placeholder="输入命令，如 $t:ping"
+				placeholder="输入基岩版命令..."
 				@keydown.enter="exec"
 				style="flex: 1;"
 			/>
 			<button class="btn btn-primary" @click="exec" :disabled="loading">
-				{{ loading ? "执行中..." : "▶ 执行" }}
+				{{ loading ? "执行中..." : "执行" }}
 			</button>
 		</div>
 
@@ -93,7 +93,7 @@ onMounted(refresh);
 				</thead>
 				<tbody>
 					<tr v-for="cmd in commands" :key="cmd.name">
-						<td style="font-family: monospace; color: var(--ctp-blue);">{{ cmd.name }}</td>
+						<td style="font-family: monospace; color: var(--primary);">{{ cmd.name }}</td>
 						<td>{{ cmd.description }}</td>
 						<td><span :class="'tag ' + levelColors[cmd.level]">{{ levelNames[cmd.level] }}</span></td>
 					</tr>

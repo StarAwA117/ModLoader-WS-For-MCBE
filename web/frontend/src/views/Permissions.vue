@@ -43,7 +43,7 @@ onMounted(refresh);
 			</span>
 		</div>
 
-		<div v-if="group === 'owner'" style="color: var(--ctp-subtext1); font-size: 14px;">
+		<div v-if="group === 'owner'" style="color: var(--text-secondary); font-size: 14px;">
 			{{ permissions.owner || "未设置" }}
 		</div>
 
@@ -58,18 +58,18 @@ onMounted(refresh);
 				<button class="btn btn-success btn-sm" @click="addPlayer(group)">添加</button>
 			</div>
 
-			<div v-if="!permissions[group]?.length" style="color: var(--ctp-overlay0); font-size: 13px; padding: 8px 0;">
+			<div v-if="!permissions[group]?.length" style="color: var(--text-muted); font-size: 13px; padding: 8px 0;">
 				暂无成员
 			</div>
 			<div v-else style="display: flex; flex-wrap: wrap; gap: 6px;">
 				<div
 					v-for="player in permissions[group]"
 					:key="player"
-					style="display: flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--ctp-mantle); border-radius: 6px; font-size: 13px;"
+					style="display: flex; align-items: center; gap: 6px; padding: 5px 10px; background: var(--bg-input); border-radius: 6px; font-size: 13px;"
 				>
 					<span>{{ player }}</span>
 					<button
-						style="background: none; border: none; color: var(--ctp-red); cursor: pointer; font-size: 14px; padding: 0 2px;"
+						style="background: none; border: none; color: var(--danger); cursor: pointer; font-size: 14px; padding: 0 2px;"
 						@click="removePlayer(group, player)"
 					>×</button>
 				</div>

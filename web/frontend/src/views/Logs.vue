@@ -53,7 +53,7 @@ onUnmounted(() => clearInterval(timer));
 		</div>
 
 		<div ref="logRef" class="log-viewer" style="height: 500px;">
-			<div v-if="logLines.length === 0" style="color: var(--ctp-overlay0); text-align: center; padding: 40px;">
+			<div v-if="logLines.length === 0" style="color: var(--text-muted); text-align: center; padding: 40px;">
 				暂无日志
 			</div>
 			<div

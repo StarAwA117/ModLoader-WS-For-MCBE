@@ -27,7 +27,7 @@ onUnmounted(() => clearInterval(timer));
 		<div class="stats-grid">
 			<div class="stat-card">
 				<div class="label">服务器状态</div>
-				<div class="value green">运行中</div>
+				<div class="value blue">运行中</div>
 			</div>
 			<div class="stat-card">
 				<div class="label">运行时间</div>
@@ -46,10 +46,9 @@ onUnmounted(() => clearInterval(timer));
 		<div class="card">
 			<div class="card-header">
 				<h2>连接的客户端</h2>
-				<span class="badge badge-green">{{ status.connections.count }} 个</span>
+				<span class="badge">{{ status.connections.count }} 个</span>
 			</div>
 			<div v-if="status.connections.clients.length === 0" class="empty-state">
-				<div class="icon">🖥️</div>
 				<p>暂无客户端连接</p>
 			</div>
 			<div v-else class="table-wrap">
@@ -66,7 +65,7 @@ onUnmounted(() => clearInterval(timer));
 							<td style="font-family: monospace; font-size: 12px;">{{ c.id.slice(0, 8) }}...</td>
 							<td>{{ c.ip }}</td>
 							<td>
-								<span :class="c.isMain ? 'badge badge-blue' : 'badge badge-green'">
+								<span :class="c.isMain ? 'badge' : 'tag tag-user'">
 									{{ c.isMain ? "主客户端" : "普通" }}
 								</span>
 							</td>
@@ -82,15 +81,15 @@ onUnmounted(() => clearInterval(timer));
 			</div>
 			<div class="form-row">
 				<div>
-					<label style="color: var(--ctp-overlay1); font-size: 12px; margin-bottom: 6px; display: block;">服务端模组</label>
-					<div v-if="status.mods.server.length === 0" style="color: var(--ctp-overlay0); font-size: 13px;">无</div>
+					<label style="color: var(--text-muted); font-size: 12px; margin-bottom: 6px; display: block;">服务端模组</label>
+					<div v-if="status.mods.server.length === 0" style="color: var(--text-muted); font-size: 13px;">无</div>
 					<div v-else style="display: flex; flex-wrap: wrap; gap: 6px;">
 						<span v-for="m in status.mods.server" :key="m" class="tag tag-op">{{ m }}</span>
 					</div>
 				</div>
 				<div>
-					<label style="color: var(--ctp-overlay1); font-size: 12px; margin-bottom: 6px; display: block;">客户端模组</label>
-					<div v-if="status.mods.client.length === 0" style="color: var(--ctp-overlay0); font-size: 13px;">无</div>
+					<label style="color: var(--text-muted); font-size: 12px; margin-bottom: 6px; display: block;">客户端模组</label>
+					<div v-if="status.mods.client.length === 0" style="color: var(--text-muted); font-size: 13px;">无</div>
 					<div v-else style="display: flex; flex-wrap: wrap; gap: 6px;">
 						<span v-for="m in status.mods.client" :key="m" class="tag tag-user">{{ m }}</span>
 					</div>
@@ -123,7 +122,6 @@ onUnmounted(() => clearInterval(timer));
 		</div>
 	</div>
 	<div v-else class="empty-state">
-		<div class="icon">📡</div>
 		<p>加载中...</p>
 	</div>
 </template>

@@ -37,14 +37,14 @@ onUnmounted(() => clearInterval(timer));
 		</div>
 
 		<div ref="chatRef" class="log-viewer" style="height: 400px; margin-bottom: 12px;">
-			<div v-if="messages.length === 0" style="color: var(--ctp-overlay0); text-align: center; padding: 40px;">
+			<div v-if="messages.length === 0" style="color: var(--text-muted); text-align: center; padding: 40px;">
 				暂无聊天记录
 			</div>
 			<div
 				v-for="(msg, i) in messages"
 				:key="i"
 				class="log-line"
-				style="color: var(--ctp-subtext1);"
+				style="color: #94a3b8;"
 			>{{ msg }}</div>
 		</div>
 

@@ -16,12 +16,12 @@ async function save() {
 	try {
 		const res = await api.saveConfig(config.value);
 		if (res.ok) {
-			message.value = "✅ 配置已保存";
+			message.value = "配置已保存";
 		} else {
-			message.value = "❌ " + (res.message || "保存失败");
+			message.value = res.message || "保存失败";
 		}
 	} catch (e) {
-		message.value = "❌ " + e.message;
+		message.value = e.message;
 	}
 	saving.value = false;
 	setTimeout(() => message.value = "", 3000);
@@ -135,13 +135,12 @@ onMounted(refresh);
 
 		<div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
 			<button class="btn btn-primary" @click="save" :disabled="saving">
-				{{ saving ? "保存中..." : "💾 保存配置" }}
+				{{ saving ? "保存中..." : "保存配置" }}
 			</button>
 			<span v-if="message" style="font-size: 13px;">{{ message }}</span>
 		</div>
 	</div>
 	<div v-else class="empty-state">
-		<div class="icon">📡</div>
 		<p>加载中...</p>
 	</div>
 </template>
