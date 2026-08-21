@@ -5,6 +5,7 @@ import { closeLogStreams } from "./lib/logger.js";
 import { config, ClientModManager, ServerModManager } from "./lib/mods.js";
 import Utils from "./lib/utils.js";
 import Current from "./lib/current.js";
+import { startWebServer } from "./web/server.js";
 
 // 创建 WebSocket 服务端，监听端口 config.ws.port
 const server = new WebSocketServer({
@@ -21,6 +22,11 @@ server.on("error", (error) => {
 await ServerModManager.load();
 await ClientModManager.load();
 shared.logger.info("服务器已启动");
+
+// 启动 WebUI 服务器
+startWebServer().catch(e => {
+	shared.logger.error(`WebUI 启动失败: ${e.message}`);
+});
 
 // 处理客户端连接
 server.on("connection", (ws) => {
