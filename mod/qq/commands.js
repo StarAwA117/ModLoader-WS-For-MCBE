@@ -1,6 +1,6 @@
 import Command from "../../lib/command.js";
 import Current from "../../lib/current.js";
-import { features } from "../../config.js";
+import { config } from "../../lib/mods.js";
 import { Detector } from "./detector.js";
 import QQ from "./main.js";
 
@@ -62,7 +62,7 @@ export default class QQClient {
 						this.client.tell("§cQQ | §fError > §i仅主客户端可使用此命令", sender);
 						return;
 					}
-					features.qq.enabled = enabled;
+					config.features.qq.enabled = enabled;
 					this.client.tellAll(`§eQQ | §fToggle > §i互通已${enabled ? "启用" : "禁用"}`);
 				})
 			]

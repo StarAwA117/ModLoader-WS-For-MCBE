@@ -57,7 +57,7 @@ npm install
 npm start
 ```
 
-启动后服务器监听 `config.js` 中的 `wsConfig.port`（默认 8080）。
+启动后服务器监听 `config.json` 中的 `ws.port`（默认 8080）。
 
 > 手动配置方式：复制 `config.example.js` 为 `config.js` 后编辑（`config.js` 不含 `isFirstRun` 字段）；若模板 `isFirstRun` 为 `true`，启动时会进入配置向导。
 
@@ -73,14 +73,14 @@ npm start
 
 ## 配置
 
-复制 `config.example.js` 为 `config.js` 并按需修改，主要配置项：
+复制 `config.example.json` 为 `config.json` 并按需修改，主要配置项：
 
 | 配置 | 说明 |
 |------|------|
-| `wsConfig.port` | 服务器端口（默认 8080） |
+| `ws.port` | 服务器端口（默认 8080） |
 | `commandPrefix` | 命令前缀（默认 `!`） |
 | `logLevel` | 日志等级（debug < info < warning < error） |
-| `AIConfig` | AI 接口地址、API Key、模型参数 |
+| `ai` | AI 接口地址、API Key、模型参数 |
 | `mods.client` / `mods.server` | 客户端/服务端 Mod 加载清单 |
 | `basePath` | 各 Mod 资源目录 |
 | `rateLimit` | 命令限流 |
@@ -91,7 +91,7 @@ npm start
 ```
 ws/
 ├── ws.js                # 服务器入口
-├── config.js            # 全局配置
+├── config.json            # 全局配置
 ├── permission.json      # 权限配置
 ├── lib/                 # 框架核心（命令/工具/Mod 管理/SAPI/权限/日志）
 ├── mod/                 # 功能模块
@@ -112,7 +112,7 @@ ws/
 
 ## 命令
 
-所有命令以命令前缀开头（`config.js` 中的 `commandPrefix`，默认为 `!`），在**游戏聊天框**或**服务器终端**中输入。参数用空格分隔，含空格的参数可用双引号包裹（如 `!m:run "我的歌.mid"`），`[参数]` 表示可选。
+所有命令以命令前缀开头（`config.json` 中的 `commandPrefix`，默认为 `!`），在**游戏聊天框**或**服务器终端**中输入。参数用空格分隔，含空格的参数可用双引号包裹（如 `!m:run "我的歌.mid"`），`[参数]` 表示可选。
 
 ### 📖 帮助与信息
 
@@ -223,7 +223,7 @@ ws/
 | `!p:add <权限类型> <账号>` | owner | 添加指定账号权限（如 `!p:add op 玩家名`） |
 | `!p:remove <权限类型> <账号>` | owner | 删除指定账号权限 |
 
-### 💬 QQ 群互通（需在 `config.js` 开启 `features.qq.enabled`）
+### 💬 QQ 群互通（需在 `config.json` 开启 `features.qq.enabled`）
 
 | 命令 | 权限 | 说明 |
 |------|------|------|

@@ -2,8 +2,10 @@ import fs from "fs";
 import path from "path";
 import zlib from "zlib";
 import { fileURLToPath } from "url";
-import { basePath, resolvePath } from "../../config.js";
 import Command from "../../lib/command.js";
+
+// 路径解析辅助（原配置曾提供的 resolvePath，按 cwd 解析相对路径）
+const resolvePath = (p) => path.resolve(p);
 
 // NBT 标签类型常量
 const TAG_END = 0, TAG_BYTE = 1, TAG_SHORT = 2, TAG_INT = 3, TAG_LONG = 4;
@@ -716,7 +718,7 @@ export default class Litematic {
 
 	// 分页显示文件列表（每页 5 个，附带文件大小）
 	pageList(sender, files, header) {
-		const dir = basePath.litematic;
+		const dir = this.config.basePath.litematic;
 		if (!fs.existsSync(dir)) {
 			this.client.tell("§cLitematic | §fError > §i建筑目录不存在", sender);
 			return;
@@ -749,7 +751,7 @@ export default class Litematic {
 
 	listFiles(page, sender) {
 		this.page = page !== undefined ? parseInt(page) || 1 : 1;
-		const dir = basePath.litematic;
+		const dir = this.config.basePath.litematic;
 		const files = fs.existsSync(dir)
 			? fs.readdirSync(dir).filter(f => f.endsWith(".litematic")).sort()
 			: [];
@@ -758,7 +760,7 @@ export default class Litematic {
 
 	searchFiles(keyword, page, sender) {
 		this.page = page !== undefined ? parseInt(page) || 1 : 1;
-		const dir = basePath.litematic;
+		const dir = this.config.basePath.litematic;
 		const files = fs.existsSync(dir)
 			? fs.readdirSync(dir).filter(f => f.endsWith(".litematic") && f.toLowerCase().includes(keyword.toLowerCase())).sort()
 			: [];
@@ -823,7 +825,7 @@ export default class Litematic {
 			return;
 		}
 
-		const filePath = path.join(basePath.litematic, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
+		const filePath = path.join(this.config.basePath.litematic, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
 		if (!fs.existsSync(filePath)) {
 			this.client.tell(`§cLitematic | §fError > §i文件不存在: ${fileName}`, sender);
 			return;
@@ -1290,7 +1292,7 @@ export default class Litematic {
 			this.client.tell("§cLitematic | §fError > §i坐标参数不完整，需要同时提供 X Y Z 或都不提供（使用自身坐标）", sender);
 			return;
 		}
-		const filePath = path.join(basePath.litematic, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
+		const filePath = path.join(this.config.basePath.litematic, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
 		if (!fs.existsSync(filePath)) {
 			this.client.tell(`§cLitematic | §fError > §i文件不存在: ${fileName}`, sender);
 			return;
@@ -1405,7 +1407,7 @@ export default class Litematic {
 			return;
 		}
 		if (mode === undefined && exportName === "raw") { raw = true; exportName = undefined; }
-		const filePath = path.join(basePath.litematic, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
+		const filePath = path.join(this.config.basePath.litematic, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
 		if (!fs.existsSync(filePath)) {
 			this.client.tell(`§cLitematic | §fError > §i文件不存在: ${fileName}`, sender);
 			return;

@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { basePath, features } from "../config.js";
 import Command from "../lib/command.js";
 import { parseMidi } from "midi-file";
 
@@ -139,7 +138,7 @@ export default class MusicDisplay {
 		this.looping = false;
 		this.loopMode = null;
 		this._filesCacheTime = 0;
-		this.playPercussion = features.music.playPercussion;
+		this.playPercussion = this.constructor.config?.features?.music?.playPercussion ?? true;
 	}
 
 	onCommand() {
@@ -242,7 +241,7 @@ export default class MusicDisplay {
 
 	get() {
 		return new Promise((resolve, reject) => {
-			fs.readdir(basePath.music, (error, files) => {
+			fs.readdir(this.config.basePath.music, (error, files) => {
 				if (error) {
 					this.client.tell(`§cMusic | §fError > §i获取目录失败: ${error}`);
 					reject(new Error("目录获取失败"));
@@ -309,10 +308,10 @@ export default class MusicDisplay {
 
 			let filePath;
 			if (fileName.endsWith(".json") || fileName.endsWith(".mid")) {
-				filePath = path.join(basePath.music, fileName);
+				filePath = path.join(this.config.basePath.music, fileName);
 			} else {
-				const jsonPath = path.join(basePath.music, fileName + ".json");
-				const midPath = path.join(basePath.music, fileName + ".mid");
+				const jsonPath = path.join(this.config.basePath.music, fileName + ".json");
+				const midPath = path.join(this.config.basePath.music, fileName + ".mid");
 				if (fs.existsSync(jsonPath)) {
 					filePath = jsonPath;
 				} else if (fs.existsSync(midPath)) {
@@ -553,7 +552,7 @@ export default class MusicDisplay {
 		const items = pageFiles.map((f, i) => {
 			const name = f.replace(/\.(json|mid)$/i, "");
 			const num = String(startIndex + i + 1).padStart(2, " ");
-			const filePath = path.join(basePath.music, f);
+			const filePath = path.join(this.config.basePath.music, f);
 			let size = "?";
 			try {
 				const stats = fs.statSync(filePath);
@@ -593,7 +592,7 @@ export default class MusicDisplay {
 		const items = pageFiles.map((f, i) => {
 			const name = f.replace(/\.(json|mid)$/i, "");
 			const num = String(startIndex + i + 1).padStart(2, " ");
-			const filePath = path.join(basePath.music, f);
+			const filePath = path.join(this.config.basePath.music, f);
 			let size = "?";
 			try {
 				const stats = fs.statSync(filePath);
