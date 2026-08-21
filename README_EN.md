@@ -14,7 +14,7 @@ Minecraft Bedrock Edition WebSocket bridge server. Connects clients via the buil
 ## Quick Start
 
 ```bash
-npm install
+node setup.js
 npm start
 ```
 

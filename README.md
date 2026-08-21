@@ -14,7 +14,7 @@ Minecraft 基岩版 WebSocket 桥接服务器。通过游戏内置 WebSocket API
 ## 快速开始
 
 ```bash
-npm install
+node setup.js
 npm start
 ```
 
