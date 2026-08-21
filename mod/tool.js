@@ -11,9 +11,11 @@ export default class Tool {
 	 * @param {Array} commands - 命令对象数组
 	 * @param {number} page - 页码（从 1 开始）
 	 * @param {number} perPage - 每页显示数量
+	 * @param {string} navCommand - 翻页导航命令（不含页码，默认 t:help，如搜索传 t:search 关键词）
+	 * @param {string} title - 列表标题（默认为 "命令帮助"）
 	 * @returns {string[]} 格式化后的帮助信息行
 	 */
-	static formatHelp(commands, page = 1, perPage = 5) {
+	static formatHelp(commands, page = 1, perPage = 5, navCommand = "t:help", title = "命令帮助") {
 		const prefix = Command.commandPrefix;
 		const sorted = [...commands].sort((a, b) => {
 			if (a.name === "t:help") return -1;
@@ -28,7 +30,7 @@ export default class Tool {
 		const pageItems = sorted.slice(start, start + perPage);
 
 		const lines = [];
-		lines.push(`§d─── ${prefix}命令帮助 §f[${p}/${totalPages}] §d───`);
+		lines.push(`§d─── ${prefix}${title} §f[${p}/${totalPages}] §d───`);
 
 		for (const cmd of pageItems) {
 			const desc = cmd.description || "§7无描述";
@@ -46,7 +48,7 @@ export default class Tool {
 		}
 
 		if (p < totalPages) {
-			lines.push(`§7输入 ${prefix}t:help ${p + 1} 查看下一页`);
+			lines.push(`§7输入 ${prefix}${navCommand} ${p + 1} 查看下一页`);
 		}
 		return lines;
 	}
@@ -75,6 +77,38 @@ export default class Tool {
 					if (perm >= 3) cmds.push(...cmdMap.owner);
 
 					const lines = Tool.formatHelp(cmds, page || 1, 5);
+					lines.forEach(line => this.client.tell(line, sender));
+				}),
+
+				Command.create("t:search", "搜索命令")
+				.addString("关键词", true)
+				.addOptionalInteger("页码", false)
+				.setFunc(async (sender, keyword, page) => {
+					const perm = await PermissionManager.query(sender);
+					if (perm instanceof Error) {
+						this.client.tell(`§cTool | §fError > §i权限查询失败`, sender);
+						return;
+					}
+
+					const cmdMap = this.client.clientMod.commands;
+					let cmds = [...cmdMap.normal];
+
+					if (perm >= 1) cmds.push(...cmdMap.user);
+					if (perm >= 2) cmds.push(...cmdMap.op);
+					if (perm >= 3) cmds.push(...cmdMap.owner);
+
+					const kw = keyword.toLowerCase();
+					const matched = cmds.filter(cmd =>
+						(cmd.name && cmd.name.toLowerCase().includes(kw)) ||
+						(cmd.description && cmd.description.toLowerCase().includes(kw))
+					);
+
+					if (!matched.length) {
+						this.client.tell(`§cTool | §fSearch > §i没有找到与 "${keyword}" 相关的命令`, sender);
+						return;
+					}
+
+					const lines = Tool.formatHelp(matched, page || 1, 5, `t:search ${keyword}`, `命令搜索 "${keyword}"`);
 					lines.forEach(line => this.client.tell(line, sender));
 				})
 			],
@@ -181,26 +215,24 @@ export default class Tool {
 					this.client.tellAll(`§eTool | §fMove > §i主客户端已切换至 ${sender}`);
 				}),
 
-				Command.create("t:reloadmod", "重载指定客户端 Mod")
-				.addString("Mod 名称", true)
+				Command.create("t:reload", "重载客户端 Mod（带名称重载单个，不带重载全部客户端）")
+				.addOptionalString("Mod 名称")
 				.setFunc(async (sender, modName) => {
 					const client = this.client;
-					const manager = client.clientMod;
-					if (!manager || typeof manager.reload !== "function") {
-						client.tell("§cTool | §fError > §i无法重载：客户端 Mod 管理器不可用", sender);
-						return;
-					}
-					const result = await manager.reload(modName);
-					client.tellAll(`§eTool | §fReload > §i${result.message}`);
-				}),
-
-				Command.create("t:reload", "重载所有当前客户端的全部 Mod 实例（不断开连接）")
-				.setFunc(async (sender) => {
-					const client = this.client;
-					const result = await ClientModManager.reloadAllClients();
-					client.tellAll(`§eTool | §fReload > §i客户端 Mod 全量重载完成 成功: ${result.success.length || 0} 失败: ${result.failed.length || 0}`);
-					if (result.failed.length > 0) {
-						result.failed.forEach(f => client.tellAll(`§cTool | §fError > §i${f}`));
+					if (modName) {
+						const manager = client.clientMod;
+						if (!manager || typeof manager.reload !== "function") {
+							client.tell("§cTool | §fError > §i无法重载：客户端 Mod 管理器不可用", sender);
+							return;
+						}
+						const result = await manager.reload(modName);
+						client.tellAll(`§eTool | §fReload > §i${result.message}`);
+					} else {
+						const result = await ClientModManager.reloadAllClients();
+						client.tellAll(`§eTool | §fReload > §i客户端 Mod 全量重载完成 成功: ${result.success.length || 0} 失败: ${result.failed.length || 0}`);
+						if (result.failed.length > 0) {
+							result.failed.forEach(f => client.tellAll(`§cTool | §fError > §i${f}`));
+						}
 					}
 				}),
 
