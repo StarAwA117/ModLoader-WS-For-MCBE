@@ -1,7 +1,7 @@
 import readline from "readline";
 import Command from "../lib/command.js";
 import Current from "../lib/current.js";
-import { ServerModManager, ClientModManager, reloadConfig } from "../lib/mods.js";
+import { config, ServerModManager, ClientModManager, reloadConfig } from "../lib/mods.js";
 
 // 清屏文本
 const CLEAR_TEXT = "\n§r\n".repeat(31);
@@ -124,7 +124,7 @@ export default class Read {
 			Command.create("c:attack", "攻击客户端聊天")
 			.setFunc((_) => {
 				Read.startSpam(10, () => {
-					Current.client.sendCommand(`me ${Read.replaceZeros(this.config.spam.attack)}`);
+					Current.client.sendCommand(`me ${Read.replaceZeros(config.spam.attack)}`);
 				}, "正在攻击客户端聊天…");
 			}),
 
@@ -151,7 +151,7 @@ export default class Read {
 						console.log("< 正在进行崩溃…");
 						// 倒计时结束后启动攻击
 						Read.startSpam(10, () => {
-							Current.client.sendCommand(`me ${Read.replaceZeros(this.config.spam.attack)}`);
+							Current.client.sendCommand(`me ${Read.replaceZeros(config.spam.attack)}`);
 						}, "正在进行崩溃攻击…");
 						return;
 					}
@@ -171,8 +171,8 @@ export default class Read {
 
 			Command.create("c:ad", "推送广告")
 			.setFunc((_) => {
-				Read.startSpam((this.config.spam.adInterval || 60000), () => {
-					Current.client.tellAll(`${this.config.spam.ad[Math.floor(Math.random() * this.config.spam.ad.length)]}`);
+				Read.startSpam((config.spam.adInterval || 60000), () => {
+					Current.client.tellAll(`${config.spam.ad[Math.floor(Math.random() * config.spam.ad.length)]}`);
 				}, "正在为客户端推送 AD…");
 			}),
 

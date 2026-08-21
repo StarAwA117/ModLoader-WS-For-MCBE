@@ -88,7 +88,7 @@ export default class MCFunc {
 
 	// 循环执行函数文件
 	// loopName: 循环标识名称
-	// loopInterval: 循环间隔（秒），未指定则默认 50ms
+	// loopInterval: 循环间隔（秒），未指定则默认 50ms（1 游戏刻）
 	async loop(fileName, loopName = null,  loopInterval = null) {
 		// 未指定名称时使用文件名作为循环名
 		if (!loopName) loopName = fileName;
@@ -106,7 +106,7 @@ export default class MCFunc {
 			return;
 		}
 
-		// 默认间隔 50ms，否则将秒转换为毫秒（负数/异常值按 0 处理，避免 setInterval 空转）
+		// 默认间隔 50ms（1 游戏刻），否则将秒转换为毫秒（负数/异常值按 0 处理，避免 setInterval 空转）
 		if (!loopInterval || !(loopInterval > 0)) {
 			loopInterval = 50;
 		} else {
