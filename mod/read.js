@@ -1,8 +1,7 @@
 import readline from "readline";
-import { spam } from "../config.js";
 import Command from "../lib/command.js";
 import Current from "../lib/current.js";
-import { ServerModManager, ClientModManager } from "../lib/mods.js";
+import { ServerModManager, ClientModManager, reloadConfig } from "../lib/mods.js";
 
 // 清屏文本
 const CLEAR_TEXT = "\n§r\n".repeat(31);
@@ -60,9 +59,16 @@ export default class Read {
 				}
 			}),
 
-			Command.create("p:reload", "重载所有服务端 Mod + 所有客户端 Mod 全部实例")
+			Command.create("p:reload", "重载所有服务端 Mod + 所有客户端 Mod 全部实例（并重新读取 config.json）")
 			.setFunc(async (_) => {
 				console.log(`< 正在重载所有 Mod...`);
+				try {
+					reloadConfig();
+					console.log(`< §a配置已按 config.json 刷新`);
+				} catch (e) {
+					console.error(`< §c配置刷新失败: ${e.message}`);
+					return;
+				}
 				const serverResult = await ServerModManager.reloadAll();
 				console.log(`< §a服务端成功: ${serverResult.success.join(", ") || "无"}`);
 				if (serverResult.failed.length > 0) {
@@ -118,7 +124,7 @@ export default class Read {
 			Command.create("c:attack", "攻击客户端聊天")
 			.setFunc((_) => {
 				Read.startSpam(10, () => {
-					Current.client.sendCommand(`me ${Read.replaceZeros(spam.attack)}`);
+					Current.client.sendCommand(`me ${Read.replaceZeros(this.config.spam.attack)}`);
 				}, "正在攻击客户端聊天…");
 			}),
 
@@ -145,7 +151,7 @@ export default class Read {
 						console.log("< 正在进行崩溃…");
 						// 倒计时结束后启动攻击
 						Read.startSpam(10, () => {
-							Current.client.sendCommand(`me ${Read.replaceZeros(spam.attack)}`);
+							Current.client.sendCommand(`me ${Read.replaceZeros(this.config.spam.attack)}`);
 						}, "正在进行崩溃攻击…");
 						return;
 					}
@@ -165,8 +171,8 @@ export default class Read {
 
 			Command.create("c:ad", "推送广告")
 			.setFunc((_) => {
-				Read.startSpam((spam.adInterval || 60000), () => {
-					Current.client.tellAll(`${spam.ad[Math.floor(Math.random() * spam.ad.length)]}`);
+				Read.startSpam((this.config.spam.adInterval || 60000), () => {
+					Current.client.tellAll(`${this.config.spam.ad[Math.floor(Math.random() * this.config.spam.ad.length)]}`);
 				}, "正在为客户端推送 AD…");
 			}),
 
