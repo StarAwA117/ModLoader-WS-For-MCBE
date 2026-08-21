@@ -1,6 +1,7 @@
 import http from "http";
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { fileURLToPath } from "url";
 import { config, reloadConfig, eventBus, ServerModManager, ClientModManager } from "../lib/mods.js";
 import Current from "../lib/current.js";
@@ -14,6 +15,12 @@ const DIST_DIR = path.join(__dirname, "frontend", "dist");
 const CONFIG_PATH = path.resolve(__dirname, "..", "config.json");
 
 const WEB_PORT = config.web?.port || 18889;
+const authConfig = config.web?.auth || {};
+const AUTH_PASSWORD = authConfig.password || crypto.randomBytes(8).toString("hex");
+const AUTH_MAX_ATTEMPTS = authConfig.maxAttempts || 3;
+const AUTH_WINDOW_MS = authConfig.windowMs || 60000;
+const AUTH_LOCKOUT_MS = authConfig.lockoutMs || 60000;
+
 let logBuffer = [];
 const LOG_BUFFER_MAX = 500;
 
@@ -26,6 +33,46 @@ shared.logger.log = function (message, type) {
 		if (logBuffer.length > LOG_BUFFER_MAX) logBuffer.shift();
 	}
 };
+
+// --- Auth rate limiting ---
+const authAttempts = new Map();
+
+function getAuthState(ip) {
+	const now = Date.now();
+	let state = authAttempts.get(ip);
+	if (!state) {
+		state = { attempts: [], lockedUntil: 0 };
+		authAttempts.set(ip, state);
+	}
+	state.attempts = state.attempts.filter(t => now - t < AUTH_WINDOW_MS);
+	if (state.lockedUntil && now > state.lockedUntil) {
+		state.lockedUntil = 0;
+		state.attempts = [];
+	}
+	return state;
+}
+
+function checkAuth(ip, password) {
+	const state = getAuthState(ip);
+	if (state.lockedUntil && Date.now() < state.lockedUntil) {
+		const waitSec = Math.ceil((state.lockedUntil - Date.now()) / 1000);
+		shared.logger.warning(`WebUI 登录锁定中: IP=${ip}, 剩余 ${waitSec}s`);
+		return { ok: false, locked: true, waitSec };
+	}
+	if (password !== AUTH_PASSWORD) {
+		state.attempts.push(Date.now());
+		shared.logger.warning(`WebUI 登录失败: IP=${ip} (已尝试 ${state.attempts.length}/${AUTH_MAX_ATTEMPTS})`);
+		if (state.attempts.length >= AUTH_MAX_ATTEMPTS) {
+			state.lockedUntil = Date.now() + AUTH_LOCKOUT_MS;
+			shared.logger.error(`WebUI 登录锁定: IP=${ip} 已被锁定 ${AUTH_LOCKOUT_MS / 1000}s`);
+			return { ok: false, locked: true, waitSec: Math.ceil(AUTH_LOCKOUT_MS / 1000) };
+		}
+		return { ok: false, locked: false, remaining: AUTH_MAX_ATTEMPTS - state.attempts.length };
+	}
+	state.attempts = [];
+	state.lockedUntil = 0;
+	return { ok: true };
+}
 
 function json(res, obj, status = 200) {
 	if (res.headersSent) return;
@@ -50,7 +97,8 @@ function getClientInfo(ws) {
 		id: ws.id,
 		ip: ws._socket?.remoteAddress || "未知",
 		isMain: ws === Current.client,
-		connectedAt: ws._connectedAt || Date.now()
+		connectedAt: ws._connectedAt || Date.now(),
+		localPlayerName: ws.localPlayerName || null
 	};
 }
 
@@ -95,10 +143,28 @@ async function handleAPI(req, res, url) {
 		res.writeHead(204, {
 			"Access-Control-Allow-Origin": "*",
 			"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-			"Access-Control-Allow-Headers": "Content-Type"
+			"Access-Control-Allow-Headers": "Content-Type, X-Auth-Token"
 		});
 		res.end();
 		return;
+	}
+
+	// Login endpoint (no auth required)
+	if (pathname === "/api/login" && method === "GET") {
+		const password = url.searchParams.get("pwd") || "";
+		const ip = req.socket.remoteAddress || "未知";
+		const result = checkAuth(ip, password);
+		if (result.ok) {
+			shared.logger.info(`WebUI 登录成功: IP=${ip}`);
+			return json(res, { ok: true, token: AUTH_PASSWORD });
+		}
+		return json(res, { ok: false, locked: result.locked, remaining: result.remaining, waitSec: result.waitSec }, 401);
+	}
+
+	// Auth check for all other API routes
+	const token = req.headers["x-auth-token"];
+	if (token !== AUTH_PASSWORD) {
+		return json(res, { ok: false, message: "未授权" }, 401);
 	}
 
 	try {
@@ -272,7 +338,9 @@ const server = http.createServer((req, res) => {
 export function startWebServer() {
 	return new Promise((resolve) => {
 		server.listen(WEB_PORT, "0.0.0.0", () => {
-			shared.logger.info(`WebUI 服务器已启动: http://0.0.0.0:${WEB_PORT}`);
+			const isCustom = config.web?.auth?.password;
+			const source = isCustom ? "配置文件" : "随机生成";
+			shared.logger.info(`WebUI 已启动: http://0.0.0.0:${WEB_PORT}/login?pwd=${AUTH_PASSWORD} [${source}]`);
 			resolve();
 		});
 	});

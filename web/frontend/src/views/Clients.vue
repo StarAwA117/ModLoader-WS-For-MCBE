@@ -44,15 +44,16 @@ onUnmounted(() => clearInterval(timer));
 			<div
 				v-for="c in clients"
 				:key="c.id"
-				style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-input); border-radius: 8px; margin-bottom: 8px;"
+				class="client-card"
 			>
 				<div style="flex: 1;">
 					<div style="font-weight: 500; font-size: 14px;">
-						{{ c.id.slice(0, 8) }}...
+						{{ c.localPlayerName || c.id.slice(0, 8) + "..." }}
 						<span v-if="c.isMain" class="badge" style="margin-left: 6px;">主客户端</span>
 					</div>
-					<div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
-						IP: {{ c.ip }}
+					<div class="client-meta">
+						<span v-if="c.localPlayerName" style="font-family: monospace;">{{ c.id.slice(0, 8) }}...</span>
+						<span>IP: {{ c.ip }}</span>
 					</div>
 				</div>
 				<div class="btn-group">
@@ -63,3 +64,23 @@ onUnmounted(() => clearInterval(timer));
 		</div>
 	</div>
 </template>
+
+<style scoped>
+.client-card {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px;
+	background: var(--bg-input);
+	border-radius: 8px;
+	margin-bottom: 8px;
+}
+
+.client-meta {
+	font-size: 12px;
+	color: var(--text-muted);
+	margin-top: 2px;
+	display: flex;
+	gap: 12px;
+}
+</style>

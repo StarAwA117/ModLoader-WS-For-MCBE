@@ -1,11 +1,20 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { routes } from "./router";
 
 const route = useRoute();
 const router = useRouter();
 const sidebarOpen = ref(false);
+const authChecked = ref(false);
+
+onMounted(() => {
+	if (sessionStorage.getItem("auth_token")) {
+		authChecked.value = true;
+	}
+});
+
+const isLoginPage = computed(() => route.path === "/login");
 
 const navGroups = computed(() => [
 	{ label: "控制", items: routes.filter(r => ["/", "/commands", "/clients"].includes(r.path)) },
@@ -31,8 +40,13 @@ function navigate(path) {
 </script>
 
 <template>
-	<div class="app-layout">
-		<!-- Hamburger -->
+	<!-- 登录页：完全独立，无侧边栏 -->
+	<div v-if="isLoginPage" class="app-layout">
+		<router-view />
+	</div>
+
+	<!-- 未完成 auth 检查前不渲染任何内容 -->
+	<div v-else-if="authChecked" class="app-layout">
 		<button v-show="!sidebarOpen" class="hamburger" @click="sidebarOpen = true">
 			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 				<line x1="3" y1="6" x2="21" y2="6"/>
@@ -41,10 +55,8 @@ function navigate(path) {
 			</svg>
 		</button>
 
-		<!-- Overlay -->
 		<div class="sidebar-overlay" :class="{ open: sidebarOpen }" @click="sidebarOpen = false"></div>
 
-		<!-- Sidebar drawer -->
 		<aside class="sidebar" :class="{ open: sidebarOpen }">
 			<div class="sidebar-header">
 				<div class="sidebar-title">

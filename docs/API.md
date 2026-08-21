@@ -4,6 +4,38 @@ REST API served by the WebUI backend on the port configured in `config.web.port`
 
 ---
 
+## Authentication
+
+All API endpoints (except `/api/login`) require an `X-Auth-Token` header with the server password.
+
+Password is configured in `config.web.auth.password`. If empty, a random password is generated on startup and logged to the console.
+
+### `GET /api/login?pwd=<password>`
+
+Authenticate and receive a token.
+
+**Query params:**
+- `pwd` — the server password
+
+**Response (success):**
+```json
+{ "ok": true, "token": "the_password" }
+```
+
+**Response (wrong password):**
+```json
+{ "ok": false, "locked": false, "remaining": 2 }
+```
+
+**Response (locked out):**
+```json
+{ "ok": false, "locked": true, "waitSec": 45 }
+```
+
+Lockout triggers after `maxAttempts` failures within `windowMs` (default: 3 attempts / 60s). Lockout lasts `lockoutMs` (default: 60s).
+
+---
+
 ## Status
 
 ### `GET /api/status`
@@ -136,7 +168,7 @@ List all connected clients.
 **Response:**
 ```json
 [
-  { "id": "abc123", "ip": "127.0.0.1", "isMain": true, "connectedAt": 1234567890 }
+  { "id": "abc123", "ip": "127.0.0.1", "isMain": true, "connectedAt": 1234567890, "localPlayerName": "Steve" }
 ]
 ```
 

@@ -93,6 +93,15 @@
 			"maxPerWindow": 20
 		}
 	},
+	"web": {
+		"port": 18889,
+		"auth": {
+			"password": "",
+			"maxAttempts": 3,
+			"windowMs": 60000,
+			"lockoutMs": 60000
+		}
+	},
 	"spam": {
 		"attack": "§c[示例] 刷屏文本",
 		"ad": [

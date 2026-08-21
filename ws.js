@@ -50,7 +50,17 @@ server.on("connection", (ws) => {
 	// 实例化客户端 Mod，注入当前连接
 	const clientMod = new ClientModManager(ws);
 	ws.clientMod = clientMod;
+	ws.localPlayerName = null;
+	ws._connectedAt = Date.now();
 	Current.clientMods.set(ws, clientMod);
+
+	// 延迟获取 localPlayerName（等待客户端进入世界）
+	setTimeout(async () => {
+		try {
+			const name = await ws.getLocalPlayer();
+			if (name) ws.localPlayerName = name;
+		} catch {}
+	}, 3000);
 
 	// 通知服务端 Mod 客户端已连接
 	ServerModManager.onClientConnect(ws, isMainClient);

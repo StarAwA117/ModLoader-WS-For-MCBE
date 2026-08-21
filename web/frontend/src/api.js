@@ -1,10 +1,34 @@
 const BASE = "/api";
 
+function getToken() {
+	return sessionStorage.getItem("auth_token") || "";
+}
+
 async function request(path, options = {}) {
 	const res = await fetch(`${BASE}${path}`, {
-		headers: { "Content-Type": "application/json" },
+		headers: {
+			"Content-Type": "application/json",
+			"X-Auth-Token": getToken()
+		},
 		...options
 	});
+	if (res.status === 401) {
+		const data = await res.json().catch(() => ({}));
+		if (data.token) {
+			sessionStorage.setItem("auth_token", data.token);
+			return data;
+		}
+		sessionStorage.removeItem("auth_token");
+		if (window.location.pathname !== "/login") {
+			window.location.href = "/login";
+		}
+		return { ok: false, message: "未授权" };
+	}
+	return res.json();
+}
+
+export async function loginWithPassword(pwd) {
+	const res = await fetch(`${BASE}/login?pwd=${encodeURIComponent(pwd)}`);
 	return res.json();
 }
 
