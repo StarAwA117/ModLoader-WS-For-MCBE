@@ -1,5 +1,5 @@
 import { NCWebsocket, Structs } from "node-napcat-ts";
-import { features } from "../../config.js";
+import { config } from "../../lib/mods.js";
 import * as shared from "../../lib/shared.js";
 import Current from "../../lib/current.js";
 
@@ -20,18 +20,18 @@ export default class QQ {
 
 	static connect() {
 		if (napcat) return;
-		if (!features.qq.enabled) return;
+		if (!config.features.qq.enabled) return;
 
-		if (!features.qq.accessToken) {
+		if (!config.features.qq.accessToken) {
 			shared.logger.warning("未配置 QQ accessToken，QQ 连接可能被服务端拒绝");
 		}
 
 		napcat = new NCWebsocket({
 			protocol: "ws",
-			host: features.qq.host,
-			port: features.qq.port,
+			host: config.features.qq.host,
+			port: config.features.qq.port,
 			// 令牌直接取自配置
-			accessToken: features.qq.accessToken,
+			accessToken: config.features.qq.accessToken,
 			reconnection: {
 				enable: true,
 				// 底层库在 nowAttempts >= attempts 后彻底放弃重连，导致连接一旦断开就永久不可用
@@ -42,8 +42,8 @@ export default class QQ {
 		}, false);
 
 		napcat.on("message.group.normal", (data) => {
-			if (!features.qq.enabled) return;
-			if (data.group_id !== features.qq.groupId) return;
+			if (!config.features.qq.enabled) return;
+			if (data.group_id !== config.features.qq.groupId) return;
 			if (!mainClient) return;
 
 			const nickname = data.sender.card || data.sender.nickname || "QQ用户";
@@ -90,7 +90,7 @@ export default class QQ {
 
 	// 手动自愈检测：强制断开并重建连接，再用真实 API 请求验证链路是否畅通
 	static async check() {
-		if (!features.qq.enabled) return { ok: false, reason: "QQ 互通未启用" };
+		if (!config.features.qq.enabled) return { ok: false, reason: "QQ 互通未启用" };
 		if (!napcat) this.connect();
 		if (!napcat) return { ok: false, reason: "napcat 未初始化" };
 
@@ -107,7 +107,7 @@ export default class QQ {
 	}
 
 	static async sendToGroup(text) {
-		if (!features.qq.enabled) return false;
+		if (!config.features.qq.enabled) return false;
 		if (!napcat) return false;
 
 		// 若底层 socket 尚未建立/已断开，先尝试（重）连接，避免“总是发送失败”
@@ -117,7 +117,7 @@ export default class QQ {
 
 		try {
 			await napcat.send_group_msg({
-				group_id: features.qq.groupId,
+				group_id: config.features.qq.groupId,
 				message: [Structs.text(text)]
 			});
 			return true;

@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { basePath } from "../config.js";
 import Command from "../lib/command.js";
 
 // Minecraft 函数文件执行类
@@ -43,7 +42,7 @@ export default class MCFunc {
 	// 返回按行分割的指令数组，失败返回 false
 	async load(fileName) {
 		try {
-			const file = await fs.promises.readFile(path.join(basePath.mcfunc, fileName), "utf-8");
+			const file = await fs.promises.readFile(path.join(this.config.basePath.mcfunc, fileName), "utf-8");
 			const commands = file.split("\n");
 			return commands;
 		} catch {

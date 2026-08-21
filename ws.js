@@ -4,14 +4,14 @@ import WebSocket, { WebSocketServer } from "ws";
 import { v4 as uuidv4 } from "uuid";
 import * as shared from "./lib/shared.js";
 import { closeLogStreams } from "./lib/logger.js";
-import { wsConfig } from "./config.js";
+import { config } from "./lib/mods.js";
 import Utils from "./lib/utils.js";
 import Current from "./lib/current.js";
 import { ClientModManager, ServerModManager } from "./lib/mods.js";
 
-// 创建 WebSocket 服务端，监听端口 wsConfig.port
+// 创建 WebSocket 服务端，监听端口 config.ws.port
 const server = new WebSocketServer({
-	port: wsConfig.port
+	port: config.ws.port
 });
 
 // 立即注册错误监听，避免端口占用等错误在异步加载期间未被捕获
@@ -53,7 +53,7 @@ server.on("connection", (ws) => {
 	ServerModManager.onClientConnect(ws, isMainClient);
 
 	// 广播连接通知
-	ws.tell(`§e${wsConfig.name} | §fSystem > §i已连接`);
+	ws.tell(`§e${config.ws.name} | §fSystem > §i已连接`);
 
 	// 处理客户端消息
 	ws.on("message", (message) => {
@@ -126,7 +126,7 @@ async function destroy() {
 
 	shared.logger.info("正在通知客户端断开连接...");
 	server.clients.forEach((client) => {
-		client.tell(`§c${wsConfig.name} | §fSystem > §i已关闭连接`);
+		client.tell(`§c${config.ws.name} | §fSystem > §i已关闭连接`);
 		client.runCommand("/closewebsocket").catch(() => {});
 		client.close();
 	});

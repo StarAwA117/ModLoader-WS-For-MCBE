@@ -1,11 +1,10 @@
 import OpenAI from "openai";
-import { AIConfig } from "../config.js";
 import Command from "../lib/command.js";
 import Utils from "../lib/utils.js";
 import Current from "../lib/current.js";
 
-// 初始化 OpenAI 客户端（无密钥时不构造，chat 时给出明确报错）
-const openai = AIConfig.options.apiKey ? new OpenAI(AIConfig.options) : null;
+// OpenAI 客户端（无密钥时不构造，chat 时给出明确报错）
+let openai = null;
 
 // AI 对话类
 // 通过 OpenAI 兼容接口与 AI 模型交互，支持单次对话和上下文对话模式
@@ -13,6 +12,9 @@ export default class AIHelper {
 	// 玩家数据存储
 	// 结构: Map<玩家名, { lastAIChat: number, AIChatContents: Array, AICommandContents: Array }>
 	static playerData = new Map();
+
+	// 注入的配置（启动时由 mods.js 设置）
+	static config = null;
 
 	// 清理定时器
 	static cleanupInterval = null;
@@ -72,8 +74,15 @@ export default class AIHelper {
 
 	// 聊天方法（sendMsg: 用户输入, mode: 模式, contents: 上下文）
 	static async chat(sendMsg, mode, contents = null) {
-		if (!AIConfig.models[mode]) throw new Error("该模式不存在");
-		const sendData = JSON.parse(JSON.stringify(AIConfig.models[mode]));
+		if (!AIHelper.config || !AIHelper.config.ai) throw new Error("AI 配置未加载");
+
+		// 惰性初始化 OpenAI 客户端（避免模块加载时即依赖配置）
+		if (!openai && AIHelper.config.ai.options?.apiKey) {
+			openai = new OpenAI(AIHelper.config.ai.options);
+		}
+
+		if (!AIHelper.config.ai.models[mode]) throw new Error("该模式不存在");
+		const sendData = JSON.parse(JSON.stringify(AIHelper.config.ai.models[mode]));
 
 		// 上文模式下将历史对话追加到请求中（过滤缺失 content 的异常历史，避免报 missing field）
 		if (contents) {
@@ -87,7 +96,7 @@ export default class AIHelper {
 			content: sendMsg
 		});
 
-		if (!openai) throw new Error("未配置 AI apiKey，请在 config.js 中填写");
+		if (!openai) throw new Error("未配置 AI apiKey，请在 config.json 中填写");
 		const completion = await openai.chat.completions.create(sendData);
 
 		// 提取回复内容（兼容字符串、数组及推理模型返回值）
@@ -155,7 +164,7 @@ export default class AIHelper {
 		const lastTime = data.lastAIChat || 0;
 
 		// 发言过快检测（先判定，通过后再更新时间，避免冷却被每次失败发言后移）
-		if (now - lastTime < AIConfig.chatCooldown) {
+		if (now - lastTime < AIHelper.config.ai.chatCooldown) {
 			this.client.tellAll(`§cAI | §fCooldown > §i聊天速度过快`);
 			return false;
 		}
