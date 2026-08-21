@@ -3,7 +3,7 @@ import Command from "../lib/command.js";
 import Current from "../lib/current.js";
 import PermissionManager from "../lib/permission.js";
 import QQ from "./qq/main.js";
-import { ServerModManager, ClientModManager } from "../lib/mods.js";
+import { ServerModManager, ClientModManager, reloadConfig } from "../lib/mods.js";
 
 export default class Tool {
 	/**
@@ -219,6 +219,13 @@ export default class Tool {
 				.addOptionalString("Mod 名称")
 				.setFunc(async (sender, modName) => {
 					const client = this.client;
+					// 先按磁盘最新 config.json 刷新内存配置（支持运行中改文件后热更新）
+					try {
+						reloadConfig();
+					} catch (e) {
+						client.tell(`§cTool | §fError > §i配置刷新失败: ${e.message}`, sender);
+						return;
+					}
 					if (modName) {
 						const manager = client.clientMod;
 						if (!manager || typeof manager.reload !== "function") {

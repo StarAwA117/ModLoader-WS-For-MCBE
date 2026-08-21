@@ -1,7 +1,7 @@
 import readline from "readline";
 import Command from "../lib/command.js";
 import Current from "../lib/current.js";
-import { ServerModManager, ClientModManager } from "../lib/mods.js";
+import { ServerModManager, ClientModManager, reloadConfig } from "../lib/mods.js";
 
 // 清屏文本
 const CLEAR_TEXT = "\n§r\n".repeat(31);
@@ -59,9 +59,16 @@ export default class Read {
 				}
 			}),
 
-			Command.create("p:reload", "重载所有服务端 Mod + 所有客户端 Mod 全部实例")
+			Command.create("p:reload", "重载所有服务端 Mod + 所有客户端 Mod 全部实例（并重新读取 config.json）")
 			.setFunc(async (_) => {
 				console.log(`< 正在重载所有 Mod...`);
+				try {
+					reloadConfig();
+					console.log(`< §a配置已按 config.json 刷新`);
+				} catch (e) {
+					console.error(`< §c配置刷新失败: ${e.message}`);
+					return;
+				}
 				const serverResult = await ServerModManager.reloadAll();
 				console.log(`< §a服务端成功: ${serverResult.success.join(", ") || "无"}`);
 				if (serverResult.failed.length > 0) {
