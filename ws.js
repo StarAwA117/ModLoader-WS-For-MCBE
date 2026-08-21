@@ -1,5 +1,3 @@
-// MCBE 兼容补丁必须在 ws 加载前生效
-import "./lib/patch-ws.js";
 import { WebSocketServer } from "ws";
 import { v4 as uuidv4 } from "uuid";
 import * as shared from "./lib/shared.js";
