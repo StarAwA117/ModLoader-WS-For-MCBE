@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { execSync } from "child_process";
 import { PNG } from "pngjs";
 import { basePath } from "../../config.js";
@@ -11,7 +12,7 @@ const FILL_LIMIT = 32767;
 
 // Block Palette
 function loadBlockPalette() {
-	const blocksPath = path.join(path.dirname(new URL(import.meta.url).pathname), "blocks.json");
+	const blocksPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "blocks.json");
 	if (!fs.existsSync(blocksPath)) {
 		throw new Error(`方块调色板文件不存在: ${blocksPath}`);
 	}
@@ -149,7 +150,7 @@ function processImage(filePath, maxDim = MAX_IMAGE_DIM) {
 		// JPEG - convert via ffmpeg
 		const tmpPng = filePath + ".tmp_convert.png";
 		try {
-			execSync(`ffmpeg -y -i "${filePath}" "${tmpPng}" 2>/dev/null`, { timeout: 30000 });
+			execSync(`ffmpeg -y -i "${filePath}" "${tmpPng}"`, { timeout: 30000, stdio: ['ignore', 'ignore', 'pipe'] });
 			const converted = fs.readFileSync(tmpPng);
 			png = PNG.sync.read(converted);
 		} catch (e) {
@@ -161,7 +162,7 @@ function processImage(filePath, maxDim = MAX_IMAGE_DIM) {
 		// WEBP - convert via ffmpeg
 		const tmpPng = filePath + ".tmp_convert.png";
 		try {
-			execSync(`ffmpeg -y -i "${filePath}" "${tmpPng}" 2>/dev/null`, { timeout: 30000 });
+			execSync(`ffmpeg -y -i "${filePath}" "${tmpPng}"`, { timeout: 30000, stdio: ['ignore', 'ignore', 'pipe'] });
 			const converted = fs.readFileSync(tmpPng);
 			png = PNG.sync.read(converted);
 		} catch (e) {

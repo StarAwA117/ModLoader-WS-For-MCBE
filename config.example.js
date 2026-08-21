@@ -2,6 +2,34 @@
 // 复制本文件为 config.js 并按需修改
 // 下方为抽象默认值，非真实部署数据
 
+// ===== 平台检测 =====
+// 所有平台统一使用相对路径写法（如 ./resources/pictures）
+// 路径不随平台变化，Android/Linux 与 Windows 行为一致
+
+/**
+ * 平台检测结果
+ */
+export const platform = {
+	isWindows: process.platform === "win32",
+	isAndroid: process.platform === "android",
+	isLinux: process.platform === "linux",
+	// 非 Windows 平台（Android/Linux/macOS 等）
+	isUnixLike: process.platform !== "win32"
+};
+
+/**
+ * 路径适配函数
+ * 所有平台统一返回相对路径写法（如 ./resources/pictures）
+ * 若传入已是绝对路径（/ 开头或盘符）则原样返回
+ * @param {string} relPath - 路径
+ * @returns {string}
+ */
+export function resolvePath(relPath) {
+	const p = String(relPath);
+	if (p.startsWith("/") || /^[a-zA-Z]:[\\/]/.test(p)) return p;
+	return p;
+}
+
 // 系统配置
 export const wsConfig = {
 	name: "ModLoader",
@@ -93,12 +121,12 @@ Output must be valid JSON without markdown or extra text. Schema: {"message":"st
 	chatCooldown: 5_000
 };
 
-// 文件路径配置
+// 文件路径配置（所有平台统一使用相对路径）
 export const basePath = {
-	music: "./resources/midi",
-	mcfunc: "./resources/mcfunc",
-	litematic: "./resources/litematic",
-	image: "./resources/pictures"
+	music: resolvePath("./resources/midi"),
+	mcfunc: resolvePath("./resources/mcfunc"),
+	litematic: resolvePath("./resources/litematic"),
+	image: resolvePath("./resources/pictures")
 };
 
 // 命令限流配置

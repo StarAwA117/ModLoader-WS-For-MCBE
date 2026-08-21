@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
 import zlib from "zlib";
-import { basePath } from "../../config.js";
+import { fileURLToPath } from "url";
+import { basePath, resolvePath } from "../../config.js";
 import Command from "../../lib/command.js";
 
 // NBT 标签类型常量
@@ -134,7 +135,7 @@ function extractBlockIndices(blockStates, totalBlocks, bitsPerIndex) {
 
 // 加载 Java -> Bedrock 映射
 function loadMappings() {
-	const dir = path.dirname(new URL(import.meta.url).pathname);
+	const dir = path.dirname(fileURLToPath(import.meta.url));
 	const mappingFile = path.join(dir, "generator_blocks.json");
 
 	let raw;
@@ -1456,7 +1457,7 @@ export default class Litematic {
 		}
 		if (!raw) trimAir(data);
 		const name = (exportName || fileName.replace(/\.litematic$/i, "")).replace(/[\\/:*?"<>|]/g, "_");
-		const dir = path.join(process.cwd(), "structures");
+		const dir = resolvePath("./structures");
 		fs.mkdirSync(dir, { recursive: true });
 		const outPath = path.join(dir, name + ".mcstructure");
 		try {
