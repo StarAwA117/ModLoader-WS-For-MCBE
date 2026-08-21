@@ -9,20 +9,52 @@
 		"gmsg": "gmsg",
 		"smsg": "smsg"
 	},
+	"features": {
+		"music": {
+			"playPercussion": true
+		},
+		"qq": {
+			"enabled": false,
+			"groupId": 123456789,
+			"host": "127.0.0.1",
+			"port": 3001,
+			"accessToken": ""
+		}
+	},
 	"mods": {
 		"client": {
 			"PermissionCommands": "../mod/permission.js",
-			"Tool": "../mod/tool.js",
+			"Tool": "../mod/tool.js"
 		},
 		"server": {
-			"Read": "../mod/read.js",
+			"read": "../mod/read.js"
 		}
+	},
+	"ai": {
+		"options": {
+			"baseURL": "https://api.deepseek.com",
+			"apiKey": ""
+		},
+		"models": {
+			"chat": {
+				"model": "deepseek-chat"
+			},
+			"command": {
+				"model": "deepseek-chat"
+			}
+		},
+		"chatCooldown": 5000
 	},
 	"utils": {
 		"tellAllToTell": false,
 		"enablePolling": true
 	},
-	"basePath": {},
+	"basePath": {
+		"music": "./resources/midi",
+		"mcfunc": "./resources/mcfunc",
+		"litematic": "./resources/litematic",
+		"image": "./resources/pictures"
+	},
 	"rateLimit": {
 		"command": {
 			"enabled": true,
