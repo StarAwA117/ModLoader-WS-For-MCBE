@@ -1,6 +1,7 @@
 # Config
 config.js
 permission.json
+resources/*
 
 
 # Logs

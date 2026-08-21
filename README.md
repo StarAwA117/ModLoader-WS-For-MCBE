@@ -15,6 +15,41 @@
 
 - Node.js（ES Module 支持，推荐 v18+）
 
+### 首次运行（图形化配置）
+
+1. 确保 `config.js` 已生成（项目自带，或从 `config.example.js` 复制）
+2. 确认模板 `config.example.js` 中的 `isFirstRun` 为 `true`（默认为 `true`，判定以模板为准；`config.js` 是用户真实配置，**不包含**该字段）
+3. 运行 `npm start`，服务器将启动**临时配置向导**并提示访问地址：
+
+```
+========================================
+  ModLoader 配置向导已启动
+  请在浏览器打开: http://127.0.0.1:18888
+  配置完成后请重新启动服务器
+========================================
+```
+
+4. 在浏览器中填写服务器名称、端口、AI、QQ 桥接、玩家权限等信息
+5. 点击「保存配置」后，自动生成 `config.js` 与 `permission.json`（旧文件自动备份为 `.bak`），并将模板 `config.example.js` 的 `isFirstRun` 写为 `false`
+6. 重新启动服务器即完成配置
+
+> 提示：配置向导仅监听 `127.0.0.1`（本机），不会对外网开放；如需修改配置，将模板 `config.example.js` 的 `isFirstRun` 改回 `true` 后重启即可。
+
+### 一键重置配置
+
+需要清空所有配置重新开始时，运行：
+
+```bash
+node ws.js --reset-all
+```
+
+该命令**不会启动服务器**，只会：
+
+- 删除 `config.js`、`permission.json` 及其 `.bak` 备份
+- 将模板 `config.example.js` 的 `isFirstRun` 复位为 `true`
+
+之后运行 `npm start` 会自动进入配置向导，重新生成一份全新的 `config.js` 与 `permission.json`。
+
 ### 安装与启动
 
 ```bash
@@ -23,6 +58,8 @@ npm start
 ```
 
 启动后服务器监听 `config.js` 中的 `wsConfig.port`（默认 8080）。
+
+> 手动配置方式：复制 `config.example.js` 为 `config.js` 后编辑（`config.js` 不含 `isFirstRun` 字段）；若模板 `isFirstRun` 为 `true`，启动时会进入配置向导。
 
 ### 游戏端连接
 

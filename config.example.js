@@ -1,6 +1,7 @@
-// 配置示例文件
-// 复制本文件为 config.js 并按需修改
-// 下方为抽象默认值，非真实部署数据
+// 模板配置文件
+// true：启动图形化配置向导（浏览器访问 http://127.0.0.1:18888 完成配置）
+// 保存后自动生成 config.js 与 permission.json，并将本标记写为 false
+export const isFirstRun = true;
 
 // ===== 平台检测 =====
 // 所有平台统一使用相对路径写法（如 ./resources/pictures）
