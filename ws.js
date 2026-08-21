@@ -1,13 +1,12 @@
-// MCBE 兼容补丁：容忍客户端 close 帧状态码 0（必须在导入 ws 之前）
+// MCBE 兼容补丁必须在 ws 加载前生效
 import "./lib/patch-ws.js";
-import WebSocket, { WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 import { v4 as uuidv4 } from "uuid";
 import * as shared from "./lib/shared.js";
 import { closeLogStreams } from "./lib/logger.js";
-import { config } from "./lib/mods.js";
+import { config, ClientModManager, ServerModManager } from "./lib/mods.js";
 import Utils from "./lib/utils.js";
 import Current from "./lib/current.js";
-import { ClientModManager, ServerModManager } from "./lib/mods.js";
 
 // 创建 WebSocket 服务端，监听端口 config.ws.port
 const server = new WebSocketServer({

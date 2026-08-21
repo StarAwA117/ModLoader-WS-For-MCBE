@@ -22,3 +22,6 @@ node_modules/
 
 # Python
 __pycache__/
+
+# 首次运行标记（setup.js 写入）
+.configured

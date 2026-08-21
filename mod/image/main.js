@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import { execSync, spawnSync } from "child_process";
 import { PNG } from "pngjs";
 import jpeg from "jpeg-js";
-import { basePath } from "../../config.js";
+import { config } from "../../lib/mods.js";
 import Command from "../../lib/command.js";
 
 const MAX_IMAGE_DIM = 256;
@@ -484,7 +484,7 @@ export default class ImageMod {
 			return;
 		}
 
-		const filePath = path.join(basePath.image, fileName);
+		const filePath = path.join(config.basePath.image, fileName);
 		if (!fs.existsSync(filePath)) {
 			this.client.tell(`§cImage | §fError > §i文件不存在: ${fileName}`, sender);
 			return;
