@@ -24,6 +24,7 @@
   "mods": {
     "client": {
       "AI": "../mod/ai.js",
+      "PiAI": "../mod/pa.js",
       "PermissionCommands": "../mod/permission.js",
       "Tool": "../mod/tool.js",
       "Position": "../mod/position.js",
