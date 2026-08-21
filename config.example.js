@@ -1,6 +1,8 @@
-// 模板配置文件
+// 模板配置文件（本分支流程：config.example.js → config.js）
 // true：启动图形化配置向导（浏览器访问 http://127.0.0.1:18888 完成配置）
 // 保存后自动生成 config.js 与 permission.json，并将本标记写为 false
+// 兼容说明：若工作区存在他人流程的 config.json（真实配置）或 config.example.json（模板），
+// ws.js 会优先使用 config.json 生成 config.js；本文件仅作为模板兜底，导出键名需保持一致。
 export const isFirstRun = true;
 
 // ===== 平台检测 =====

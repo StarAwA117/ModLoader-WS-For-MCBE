@@ -1,12 +1,16 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-// 首次运行判定来自模板 config.example.js（永不缺失；config.js 只存储用户真实配置，不含 isFirstRun）
-import { isFirstRun } from "./config.example.js";
+// 首次运行判定不再使用静态导入：需兼容两种配置流程的模板来源
+//   - 本分支流程：config.example.js（模板）→ config.js（真实配置，ESM 导出）
+//   - 他人分支流程：config.example.json（模板）→ config.json（真实配置，JSON）
+// 因此 isFirstRun 改为在引导阶段按文件存在性动态读取（见下方引导阶段）。
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const CONFIG_JS = path.join(ROOT, "config.js");
+const CONFIG_JSON = path.join(ROOT, "config.json");
 const CONFIG_EXAMPLE = path.join(ROOT, "config.example.js");
+const CONFIG_EXAMPLE_JSON = path.join(ROOT, "config.example.json");
 const WANT_RESET = process.argv.includes("--reset-all");
 
 // ===== 依赖检测（必须早于任何第三方模块使用） =====
@@ -49,19 +53,63 @@ try {
 // ===== 引导阶段（必须早于下方任何依赖 config.js 的模块加载） =====
 // 依赖 config.js 的模块（lib/logger.js、lib/utils.js、lib/mods.js 等）都是动态导入的，
 // 因此 config.js 缺失时（如 --reset-all 之后）可先在此根据模板自动补全，保证程序可启动。
+// 兼容两种配置流程（lib/、mod/ 均静态导入 "../config.js"，config.js 是唯一出口）：
+//   - 本分支：config.example.js（模板）→ config.js（真实配置，ESM 导出）
+//   - 他人分支：config.example.json（模板）→ config.json（真实配置，JSON）
+// 生成优先级：config.json（他人真实配置）> config.example.js（本分支模板）> config.example.json（他人模板）
+
+/** 将 JSON 配置对象转换为 ESM 导出文本（键名与 config.example.js 的导出名一致） */
+function jsonToConfigJs(obj) {
+	const lines = [];
+	for (const [key, value] of Object.entries(obj)) {
+		if (key === "isFirstRun") continue; // 标记不写入 config.js
+		lines.push(`export const ${key} = ${JSON.stringify(value, null, "\t")};`);
+	}
+	return lines.join("\n\n") + "\n";
+}
+
+// 首次运行判定：兼容两种模板来源，按存在性动态读取（默认 true 走配置向导）
+let isFirstRun = true;
 if (!WANT_RESET && !fs.existsSync(CONFIG_JS)) {
-	const tpl = fs.readFileSync(CONFIG_EXAMPLE, "utf8");
-	// config.js 只存真实配置：剔除模板携带的 isFirstRun 标记块
-	const cfg = tpl.replace(/\/\/ ===== 首次运行 =====[\s\S]*?export const isFirstRun = (true|false);\r?\n(\r?\n)?/, "");
-	fs.writeFileSync(CONFIG_JS, cfg, "utf8");
-	console.log("未找到 config.js，已根据模板自动生成默认配置（可在向导中修改）");
+	let generated = null;
+	if (fs.existsSync(CONFIG_JSON)) {
+		// 他人流程的真实配置：config.json → 转换为 config.js
+		const json = JSON.parse(fs.readFileSync(CONFIG_JSON, "utf8"));
+		generated = jsonToConfigJs(json);
+		console.log("未找到 config.js，已根据 config.json 生成默认配置（可在向导中修改）");
+	} else if (fs.existsSync(CONFIG_EXAMPLE)) {
+		// 本分支模板：剔除文件头注释与 isFirstRun 标记行后写入 config.js
+		const tpl = fs.readFileSync(CONFIG_EXAMPLE, "utf8");
+		generated = tpl.replace(/^[\s\S]*?export const isFirstRun = (true|false);\r?\n(\r?\n)?/, "");
+		console.log("未找到 config.js，已根据模板自动生成默认配置（可在向导中修改）");
+	} else if (fs.existsSync(CONFIG_EXAMPLE_JSON)) {
+		// 他人模板兜底：config.example.json → 转换为 config.js
+		const json = JSON.parse(fs.readFileSync(CONFIG_EXAMPLE_JSON, "utf8"));
+		generated = jsonToConfigJs(json);
+		console.log("未找到 config.js，已根据 config.example.json 生成默认配置（可在向导中修改）");
+	}
+	if (generated !== null) fs.writeFileSync(CONFIG_JS, generated, "utf8");
+}
+
+// 读取模板中的 isFirstRun 标记（模板存在性优先：本分支模板 > 他人模板）
+{
+	const mJs = fs.existsSync(CONFIG_EXAMPLE)
+		? fs.readFileSync(CONFIG_EXAMPLE, "utf8").match(/export const isFirstRun = (true|false);/)
+		: null;
+	if (mJs) {
+		isFirstRun = mJs[1] === "true";
+	} else if (fs.existsSync(CONFIG_EXAMPLE_JSON)) {
+		const tplJson = JSON.parse(fs.readFileSync(CONFIG_EXAMPLE_JSON, "utf8"));
+		isFirstRun = tplJson.isFirstRun !== false;
+	}
 }
 
 // ===== 一键重置：node ws.js --reset-all =====
 // 清除所有配置文件（不启动服务器）：删除 config.js / permission.json 及其 .bak 备份，
 // 并将模板 config.example.js 的 isFirstRun 复位为 true，下次启动自动进入配置向导
 if (WANT_RESET) {
-	const files = ["config.js", "config.js.bak", "permission.json", "permission.json.bak"];
+	// 同时清除两种流程的配置文件（含 .bak 备份）
+	const files = ["config.js", "config.js.bak", "config.json", "config.json.bak", "permission.json", "permission.json.bak"];
 	const removed = [];
 	for (const name of files) {
 		const p = path.join(ROOT, name);
@@ -70,14 +118,27 @@ if (WANT_RESET) {
 			removed.push(name);
 		}
 	}
-	// 复位模板标记，下次启动自动进入向导重新配置
-	try {
-		const src = fs.readFileSync(CONFIG_EXAMPLE, "utf8");
-		const next = src.replace(/export const isFirstRun = (true|false);/, "export const isFirstRun = true;");
-		if (next !== src) fs.writeFileSync(CONFIG_EXAMPLE, next, "utf8");
-	} catch {
-		// 模板不可写时静默忽略
-	}
+	// 复位模板标记，下次启动自动进入向导重新配置（两种模板都尝试复位）
+	const resetTpl = (p, isJson) => {
+		try {
+			if (!fs.existsSync(p)) return;
+			if (isJson) {
+				const json = JSON.parse(fs.readFileSync(p, "utf8"));
+				if (json.isFirstRun !== undefined && json.isFirstRun !== true) {
+					json.isFirstRun = true;
+					fs.writeFileSync(p, JSON.stringify(json, null, "\t"), "utf8");
+				}
+			} else {
+				const src = fs.readFileSync(p, "utf8");
+				const next = src.replace(/export const isFirstRun = (true|false);/, "export const isFirstRun = true;");
+				if (next !== src) fs.writeFileSync(p, next, "utf8");
+			}
+		} catch {
+			// 模板不可写时静默忽略
+		}
+	};
+	resetTpl(CONFIG_EXAMPLE, false);
+	resetTpl(CONFIG_EXAMPLE_JSON, true);
 	console.log("========================================");
 	console.log("  配置已重置");
 	console.log("========================================");
@@ -93,8 +154,8 @@ const Utils = (await import("./lib/utils.js")).default;
 const Current = (await import("./lib/current.js")).default;
 const { ClientModManager, ServerModManager } = await import("./lib/mods.js");
 
-// 首次运行检查：模板 config.example.js 的 isFirstRun 为 true 时启动图形化配置向导，
-// 不启动 WebSocket 服务；配置保存后模板标记自动写为 false，重启服务器即正常启动
+// 首次运行检查：模板（config.example.js / config.example.json）的 isFirstRun 为 true 时启动
+// 图形化配置向导，不启动 WebSocket 服务；配置保存后模板标记自动写为 false，重启服务器即正常启动
 if (isFirstRun) {
 	shared.logger.info("检测到首次运行，启动图形化配置向导...");
 	const { startSetupServer } = await import("./lib/setup.js");
