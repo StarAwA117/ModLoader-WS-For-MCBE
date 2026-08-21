@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { execSync } from "child_process";
 import { PNG } from "pngjs";
-import { basePath } from "../../config.js";
+// config 由 mods.js 注入 (this.config)
 import Command from "../../lib/command.js";
 
 const MAX_IMAGE_DIM = 256;
@@ -455,7 +455,7 @@ export default class ImageMod {
 			return;
 		}
 
-		const filePath = path.join(basePath.image, fileName);
+		const filePath = path.join(this.config.basePath.image, fileName);
 		if (!fs.existsSync(filePath)) {
 			this.client.tell(`§cImageDebug | §fError > §i文件不存在: ${fileName}`, sender);
 			return;
