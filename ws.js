@@ -1,10 +1,6 @@
-// MCBE 兼容补丁：容忍客户端 close 帧状态码 0（必须在导入 ws 之前）
-import "./lib/patch-ws.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import WebSocket, { WebSocketServer } from "ws";
-import { v4 as uuidv4 } from "uuid";
 // 首次运行判定来自模板 config.example.js（永不缺失；config.js 只存储用户真实配置，不含 isFirstRun）
 import { isFirstRun } from "./config.example.js";
 
@@ -12,6 +8,43 @@ const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const CONFIG_JS = path.join(ROOT, "config.js");
 const CONFIG_EXAMPLE = path.join(ROOT, "config.example.js");
 const WANT_RESET = process.argv.includes("--reset-all");
+
+// ===== 依赖检测（必须早于任何第三方模块使用） =====
+// ws / uuid 使用动态导入：静态 import 在模块解析阶段执行，依赖缺失会直接抛出
+// ERR_MODULE_NOT_FOUND 导致进程崩溃、无法引导安装。动态导入可捕获该错误，
+// 缺失时自动运行 setup.js 安装依赖，成功后继续启动。
+// MCBE 兼容补丁（lib/patch-ws.js）需要 ws 已安装才能生效，因此也改为在依赖
+// 检测通过后、ws 加载前执行，保证 patch 始终先于 ws 生效。
+let WebSocket, WebSocketServer, uuidv4;
+try {
+	// 先加载 MCBE 兼容补丁（必须在 ws 加载之前替换 validation.isValidStatusCode）
+	await import("./lib/patch-ws.js");
+	({ default: WebSocket, WebSocketServer } = await import("ws"));
+	({ v4: uuidv4 } = await import("uuid"));
+} catch (error) {
+	if (error?.code === "ERR_MODULE_NOT_FOUND" || error?.code === "MODULE_NOT_FOUND") {
+		console.log("========================================");
+		console.log("  检测到缺少依赖，正在运行 setup.js 安装依赖...");
+		console.log("========================================");
+		const { spawnSync } = await import("child_process");
+		const res = spawnSync(process.execPath, ["setup.js"], { cwd: ROOT, stdio: "inherit" });
+		if (res.status !== 0) {
+			console.error("依赖安装失败，请手动运行 node setup.js 排查");
+			process.exit(1);
+		}
+		// 安装成功后重新加载（失败的 import 不会进入模块缓存，可重新解析）
+		try {
+			await import("./lib/patch-ws.js");
+			({ default: WebSocket, WebSocketServer } = await import("ws"));
+			({ v4: uuidv4 } = await import("uuid"));
+		} catch (e2) {
+			console.error(`依赖安装后仍无法加载: ${e2.message}`);
+			process.exit(1);
+		}
+	} else {
+		throw error;
+	}
+}
 
 // ===== 引导阶段（必须早于下方任何依赖 config.js 的模块加载） =====
 // 依赖 config.js 的模块（lib/logger.js、lib/utils.js、lib/mods.js 等）都是动态导入的，
