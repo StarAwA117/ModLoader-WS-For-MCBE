@@ -24,7 +24,7 @@ In-game, connect with `/connect 127.0.0.1:8080`.
 
 ## Commands
 
-Type `t:help` in the game chat for command help.
+Type `t:help` in the game chat for command help. Full command reference in [docs](./docs/).
 
 ## License
 
