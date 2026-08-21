@@ -9,6 +9,7 @@
 		"start": "node ws.js"
 	},
 	"dependencies": {
+		"jpeg-js": "^0.4.4",
 		"midi-file": "^1.2.0",
 		"node-napcat-ts": "^0.4.25",
 		"openai": "^4.0.0",

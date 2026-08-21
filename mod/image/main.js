@@ -1,8 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { execSync } from "child_process";
+import { execSync, spawnSync } from "child_process";
 import { PNG } from "pngjs";
+import jpeg from "jpeg-js";
 import { basePath } from "../../config.js";
 import Command from "../../lib/command.js";
 
@@ -138,6 +139,33 @@ function resizeImage(pixels, origWidth, origHeight, newWidth, newHeight) {
 	return { pixels: newPixels, width: newWidth, height: newHeight };
 }
 
+/**
+ * 检测系统中是否可执行 ffmpeg
+ * @returns {boolean}
+ */
+function ffmpegAvailable() {
+	try {
+		const r = spawnSync("ffmpeg", ["-version"], { stdio: "ignore", timeout: 5000 });
+		return !r.error && r.status === 0;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * 解码子进程的 stderr（Windows 中文系统为 GBK 编码，直接 toString 会乱码）
+ * @param {Buffer} buf
+ * @returns {string}
+ */
+function decodeStderr(buf) {
+	if (!buf || !buf.length) return "";
+	try {
+		return new TextDecoder("gbk").decode(buf);
+	} catch {
+		return buf.toString("utf8");
+	}
+}
+
 function processImage(filePath, maxDim = MAX_IMAGE_DIM) {
 	const buffer = fs.readFileSync(filePath);
 
@@ -147,26 +175,26 @@ function processImage(filePath, maxDim = MAX_IMAGE_DIM) {
 		// PNG
 		png = PNG.sync.read(buffer);
 	} else if (buffer[0] === 0xff && buffer[1] === 0xd8) {
-		// JPEG - convert via ffmpeg
-		const tmpPng = filePath + ".tmp_convert.png";
+		// JPEG - 纯 JS 解码（jpeg-js），无需 ffmpeg
 		try {
-			execSync(`ffmpeg -y -i "${filePath}" "${tmpPng}"`, { timeout: 30000, stdio: ['ignore', 'ignore', 'pipe'] });
-			const converted = fs.readFileSync(tmpPng);
-			png = PNG.sync.read(converted);
+			const decoded = jpeg.decode(buffer, { useTArray: true, formatAsRGBA: true });
+			png = { width: decoded.width, height: decoded.height, data: decoded.data };
 		} catch (e) {
-			throw new Error(`JPEG 转换失败: ${e.message}`);
-		} finally {
-			try { fs.unlinkSync(tmpPng); } catch {}
+			throw new Error(`JPEG 解码失败: ${e.message}`);
 		}
 	} else if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) {
 		// WEBP - convert via ffmpeg
+		if (!ffmpegAvailable()) {
+			throw new Error("WEBP 图片需要 ffmpeg 转换，但系统中未检测到 ffmpeg（请安装 ffmpeg 并加入 PATH）");
+		}
 		const tmpPng = filePath + ".tmp_convert.png";
 		try {
 			execSync(`ffmpeg -y -i "${filePath}" "${tmpPng}"`, { timeout: 30000, stdio: ['ignore', 'ignore', 'pipe'] });
 			const converted = fs.readFileSync(tmpPng);
 			png = PNG.sync.read(converted);
 		} catch (e) {
-			throw new Error(`WEBP 转换失败: ${e.message}`);
+			const stderrText = decodeStderr(e.stderr);
+			throw new Error(`WEBP 转换失败: ${stderrText || e.message}`);
 		} finally {
 			try { fs.unlinkSync(tmpPng); } catch {}
 		}

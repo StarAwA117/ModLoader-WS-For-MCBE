@@ -101,29 +101,41 @@ server.on("connection", (ws) => {
 	// 分配唯一 ID，用于客户端 Mod 存储和事件总线隔离
 	ws.id = uuidv4();
 
-	// 为当前客户端绑定工具方法（runCommand, subscribe, tell 等）
-	ws.utils = new Utils(ws);
+	// 延迟初始化：MCBE 客户端建立 WebSocket 连接后需约 1 秒完成内部握手，
+	// 若立即发送命令（权限检测 /list、SAPI 检测 /gmsg、订阅、欢迎消息等），
+	// 客户端会主动断开并重连（表现为"每次启动都要断开一次才能连上"）。
+	let clientMod = null;
+	const initTimer = setTimeout(() => {
+		// 延迟期间客户端可能已断开，检查连接状态
+		if (ws.readyState !== WebSocket.OPEN) return;
 
-	// 记录第一个连接的客户端为主客户端
-	const isMainClient = !Current.client;
-	if (isMainClient) {
-		Current.client = ws;
-		shared.logger.info("主客户端已连接");
-	}
+		// 为当前客户端绑定工具方法（runCommand, subscribe, tell 等）
+		ws.utils = new Utils(ws);
 
-	// 实例化客户端 Mod，注入当前连接
-	const clientMod = new ClientModManager(ws);
-	ws.clientMod = clientMod;
-	Current.clientMods.set(ws, clientMod);
+		// 记录第一个连接的客户端为主客户端
+		const isMainClient = !Current.client;
+		if (isMainClient) {
+			Current.client = ws;
+			shared.logger.info("主客户端已连接");
+		}
 
-	// 通知服务端 Mod 客户端已连接
-	ServerModManager.onClientConnect(ws, isMainClient);
+		// 实例化客户端 Mod，注入当前连接
+		clientMod = new ClientModManager(ws);
+		ws.clientMod = clientMod;
+		Current.clientMods.set(ws, clientMod);
 
-	// 广播连接通知
-	ws.tell(`§e${wsConfig.name} | §fSystem > §i已连接`);
+		// 通知服务端 Mod 客户端已连接
+		ServerModManager.onClientConnect(ws, isMainClient);
+
+		// 广播连接通知
+		ws.tell(`§e${wsConfig.name} | §fSystem > §i已连接`);
+	}, 1000);
 
 	// 处理客户端消息
 	ws.on("message", (message) => {
+		// 初始化完成前忽略客户端消息（客户端握手期间无业务消息）
+		if (!ws.utils) return;
+
 		// 仅 JSON 解析需捕获，非 JSON 消息直接忽略；
 		// Mod 分发调用各自内部已有 try/catch，不应被外层吞掉，便于排查
 		let data;
@@ -146,6 +158,9 @@ server.on("connection", (ws) => {
 
 	// 处理客户端断开连接
 	ws.on("close", () => {
+		// 取消待执行的延迟初始化
+		clearTimeout(initTimer);
+
 		shared.logger.info(`客户端 ${clientIP} 连接已关闭`);
 
 		// 通知服务端 Mod 客户端已断开连接
@@ -159,7 +174,7 @@ server.on("connection", (ws) => {
 
 		// 销毁该客户端的所有 Mod 实例
 		Current.clientMods.delete(ws);
-		clientMod.destroy();
+		if (clientMod) clientMod.destroy();
 
 		// 清理工具类回调映射，防止内存泄漏
 		if (ws.utils && typeof ws.utils.destroy === "function") {
