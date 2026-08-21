@@ -15,6 +15,41 @@
 
 - Node.js（ES Module 支持，推荐 v18+）
 
+### 首次运行（图形化配置）
+
+1. 确保 `config.js` 已生成（项目自带，或从 `config.example.js` 复制）
+2. 确认模板 `config.example.js` 中的 `isFirstRun` 为 `true`（默认为 `true`，判定以模板为准；`config.js` 是用户真实配置，**不包含**该字段）
+3. 运行 `npm start`，服务器将启动**临时配置向导**并提示访问地址：
+
+```
+========================================
+  ModLoader 配置向导已启动
+  请在浏览器打开: http://127.0.0.1:18888
+  配置完成后请重新启动服务器
+========================================
+```
+
+4. 在浏览器中填写服务器名称、端口、AI、QQ 桥接、玩家权限等信息
+5. 点击「保存配置」后，自动生成 `config.js` 与 `permission.json`（旧文件自动备份为 `.bak`），并将模板 `config.example.js` 的 `isFirstRun` 写为 `false`
+6. 重新启动服务器即完成配置
+
+> 提示：配置向导仅监听 `127.0.0.1`（本机），不会对外网开放；如需修改配置，将模板 `config.example.js` 的 `isFirstRun` 改回 `true` 后重启即可。
+
+### 一键重置配置
+
+需要清空所有配置重新开始时，运行：
+
+```bash
+node ws.js --reset-all
+```
+
+该命令**不会启动服务器**，只会：
+
+- 删除 `config.js`、`permission.json` 及其 `.bak` 备份
+- 将模板 `config.example.js` 的 `isFirstRun` 复位为 `true`
+
+之后运行 `npm start` 会自动进入配置向导，重新生成一份全新的 `config.js` 与 `permission.json`。
+
 ### 安装与启动
 
 ```bash
@@ -22,27 +57,9 @@ npm install
 npm start
 ```
 
-### 首次运行（图形化配置）
+启动后服务器监听 `config.json` 中的 `ws.port`（默认 8080）。
 
-首次运行（无 `config.json` 或无 `.configured` 标记）时，服务器自动启动**临时配置向导**并提示访问地址：
-
-```
-=========================================
-  ModLoader 配置向导已启动
-  请在浏览器打开: http://127.0.0.1:18888
-  配置完成后请重新启动服务器
-=========================================
-```
-
-1. 在浏览器中填写服务器名称、端口、模组选择、AI、QQ 桥接、玩家权限等信息
-2. 点击「保存配置」后，自动生成 `config.json` 与 `permission.json`（旧文件自动备份为 `.bak`），并写入 `.configured` 标记
-3. 重新启动服务器即完成配置
-
-> 提示：配置向导仅监听 `127.0.0.1`（本机），不会对外网开放。如需重新配置，删除项目根目录下的 `.configured` 文件后重启即可。
-
-### 手动配置
-
-复制 `config.example.json` 为 `config.json` 并按需修改，详见下方配置表。
+> 手动配置方式：复制 `config.example.js` 为 `config.js` 后编辑（`config.js` 不含 `isFirstRun` 字段）；若模板 `isFirstRun` 为 `true`，启动时会进入配置向导。
 
 ### 游戏端连接
 
@@ -56,32 +73,25 @@ npm start
 
 ## 配置
 
-配置存储在 `config.json`（不纳入版本控制），模板为 `config.example.json`。
+复制 `config.example.json` 为 `config.json` 并按需修改，主要配置项：
 
-| 配置项 | 说明 |
-|--------|------|
-| `ws.name` | 服务器名称 |
-| `ws.port` | WebSocket 端口（默认 8080） |
+| 配置 | 说明 |
+|------|------|
+| `ws.port` | 服务器端口（默认 8080） |
 | `commandPrefix` | 命令前缀（默认 `!`） |
 | `logLevel` | 日志等级（debug < info < warning < error） |
+| `ai` | AI 接口地址、API Key、模型参数 |
 | `mods.client` / `mods.server` | 客户端/服务端 Mod 加载清单 |
-| `features.music` | 音乐设置（播放打击乐等） |
-| `features.qq` | QQ 群互通设置（群号、桥接地址等） |
-| `ai` | AI 接口地址、API Key、模型参数、对话冷却 |
-| `spam` | 刷屏攻击文本、广告模板与推送间隔 |
-| `sapi` | Minecraft Bedrock 服务端指令接口（gmsg/smsg） |
-| `utils` | 工具设置（tellAll 转发模式、轮询开关） |
-| `basePath` | 各模块资源目录（music/mcfunc/litematic/image） |
-| `rateLimit` | 命令限流（窗口时间、上限次数） |
+| `basePath` | 各 Mod 资源目录 |
+| `rateLimit` | 命令限流 |
+| `spam` | 聊天刷屏/广告模板与频率 |
 
 ## 目录结构
 
 ```
 ws/
 ├── ws.js                # 服务器入口
-├── setup.js             # 独立配置脚本（首次运行 / 重新配置）
-├── config.json          # 全局配置（gitignore）
-├── config.example.json  # 配置模板
+├── config.json            # 全局配置
 ├── permission.json      # 权限配置
 ├── lib/                 # 框架核心（命令/工具/Mod 管理/SAPI/权限/日志）
 ├── mod/                 # 功能模块
@@ -203,11 +213,11 @@ ws/
 | 命令 | 权限 | 说明 |
 | :--- | :--- | :--- |
 | `!pa <对话内容>` | normal | 与AI进行对话(首次对话可能响应时间慢) |
-| `!pa:new` | owner | 为执行者开启一个全新的对话会话，并清空当前会话的上下文。 |
+| `!pa:new` | normal | 为执行者开启一个全新的对话会话，并清空当前会话的上下文。 |
 | `!pa:status` | owner | 查看执行者当前正在使用的会话文件名。 |
-| `!pa:info` | owner | 显示详细的运行信息，包括模型、pi 版本、扩展、Token 用量和空闲消息状态等。 |
-| `!pa:idle` | owner | 切换空闲消息的开启/关闭状态。 |
-| `!pa:idle test` | owner | 手动发送一条随机的空闲测试消息。 |
+| `!pa:info` | normal | 显示详细的运行信息，包括模型、pi 版本、扩展、Token 用量和空闲消息状态等。 |
+| `!pa:idle` | normal | 切换空闲消息的开启/关闭状态。 |
+| `!pa:idle test` | normal | 手动发送一条随机的空闲测试消息。 |
 | `!pa:session` | owner | 查看当前服务器上所有玩家的会话总数和活跃数。 |
 
 ### 📜 Function 文件执行

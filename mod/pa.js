@@ -576,7 +576,7 @@ class PA {
 
 	commands() {
 		return {
-			user: [
+			normal: [
 				{
 					name: `${commandPrefix}pa`,
 					execute: (sender, msg) => {
@@ -596,27 +596,12 @@ class PA {
 						this.handlePA(sender, prompt);
 						return { status: true };
 					}
-				}
-			],
-			owner: [
+				},
 				{
 					name: `${commandPrefix}pa:new`,
 					execute: (sender, msg) => {
 						if (msg !== `${commandPrefix}pa:new`) return false;
 						this._startNewSession(sender, true);
-						return { status: true };
-					}
-				},
-				{
-					name: `${commandPrefix}pa:status`,
-					execute: (sender, msg) => {
-						if (msg !== `${commandPrefix}pa:status`) return false;
-						const file = this._getSessionFile(sender);
-						if (file) {
-							if (this.client) this.client.tellAll(`§apa§r | status > §7正在用对话: ${path.basename(file)} 喵`);
-						} else {
-							if (this.client) this.client.tellAll("§apa§r | status > §7还没有对话呢，说点什么开始吧 喵~");
-						}
 						return { status: true };
 					}
 				},
@@ -660,6 +645,21 @@ class PA {
 							return { status: true };
 						}
 						return false;
+					}
+				}
+			],
+			owner: [
+				{
+					name: `${commandPrefix}pa:status`,
+					execute: (sender, msg) => {
+						if (msg !== `${commandPrefix}pa:status`) return false;
+						const file = this._getSessionFile(sender);
+						if (file) {
+							if (this.client) this.client.tellAll(`§apa§r | status > §7正在用对话: ${path.basename(file)} 喵`);
+						} else {
+							if (this.client) this.client.tellAll("§apa§r | status > §7还没有对话呢，说点什么开始吧 喵~");
+						}
+						return { status: true };
 					}
 				},
 				{
