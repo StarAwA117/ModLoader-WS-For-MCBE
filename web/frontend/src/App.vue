@@ -6,12 +6,29 @@ import { routes } from "./router";
 const route = useRoute();
 const router = useRouter();
 const sidebarOpen = ref(false);
-const authChecked = ref(false);
+const authChecked = computed(() => !!sessionStorage.getItem("auth_token"));
+
+// ===== Catppuccin 主题切换 =====
+const themes = [
+	{ key: "latte", label: "Latte 拿铁", bg: "linear-gradient(135deg, #eff1f5 50%, #1e66f5 50%)" },
+	{ key: "frappe", label: "Frappé 法布蕾", bg: "linear-gradient(135deg, #303446 50%, #8caaee 50%)" },
+	{ key: "macchiato", label: "Macchiato 玛奇朵", bg: "linear-gradient(135deg, #24273a 50%, #8aadf4 50%)" },
+	{ key: "mocha", label: "Mocha 摩卡", bg: "linear-gradient(135deg, #1e1e2e 50%, #89b4fa 50%)" }
+];
+const currentTheme = ref(localStorage.getItem("starws-theme") || "mocha");
+
+function applyTheme(t) {
+	document.documentElement.classList.remove("theme-latte", "theme-frappe", "theme-macchiato", "theme-mocha");
+	document.documentElement.classList.add("theme-" + t);
+}
+function setTheme(t) {
+	currentTheme.value = t;
+	localStorage.setItem("starws-theme", t);
+	applyTheme(t);
+}
 
 onMounted(() => {
-	if (sessionStorage.getItem("auth_token")) {
-		authChecked.value = true;
-	}
+	applyTheme(currentTheme.value);
 });
 
 const isLoginPage = computed(() => route.path === "/login");
@@ -85,6 +102,18 @@ function navigate(path) {
 					</a>
 				</template>
 			</nav>
+			<div class="theme-switcher">
+				<span class="theme-label">主题</span>
+				<button
+					v-for="t in themes"
+					:key="t.key"
+					class="theme-dot"
+					:class="{ active: currentTheme === t.key }"
+					:style="{ background: t.bg }"
+					:title="t.label"
+					@click="setTheme(t.key)"
+				></button>
+			</div>
 		</aside>
 
 		<main class="main-content">

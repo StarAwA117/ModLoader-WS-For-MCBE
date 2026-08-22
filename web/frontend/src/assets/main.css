@@ -1,20 +1,104 @@
-:root {
-	--primary: #60a5fa;
-	--primary-hover: #3b82f6;
-	--primary-dim: rgba(96, 165, 250, 0.12);
-	--primary-glow: rgba(96, 165, 250, 0.06);
-	--danger: #f87171;
-	--text: #1e293b;
-	--text-secondary: #475569;
-	--text-muted: #94a3b8;
-	--bg: #f0f7ff;
-	--bg-card: #ffffff;
-	--bg-card-solid: #ffffff;
-	--bg-input: #f1f5f9;
-	--border: #e2e8f0;
-	--border-focus: #60a5fa;
+/* ============================================================
+   Catppuccin 四套主题
+   通过 <html class="theme-latte|frappe|macchiato|mocha"> 切换
+   默认 = Mocha（最流行的暗色旗舰口味）
+   ============================================================ */
+:root,
+:root.theme-mocha {
+	--primary: #89b4fa;
+	--primary-hover: #cba6f7;
+	--primary-dim: color-mix(in srgb, var(--primary) 14%, transparent);
+	--primary-glow: color-mix(in srgb, var(--primary) 7%, transparent);
+	--danger: #f38ba8;
+	--text: #cdd6f4;
+	--text-secondary: #bac2de;
+	--text-muted: #9399b2;
+	--bg: #1e1e2e;
+	--bg-card: #181825;
+	--bg-card-solid: #181825;
+	--bg-input: #313244;
+	--border: #313244;
+	--border-focus: var(--primary);
+	--log-bg: #11111b;
+	--c-mauve: #cba6f7;
+	--c-yellow: #f9e2af;
+	--c-green: #a6e3a1;
+	--c-peach: #fab387;
+	--c-sky: #89dceb;
 	--radius: 10px;
-	--shadow: 0 1px 4px rgba(0,0,0,0.06);
+	--shadow: 0 1px 4px rgba(0,0,0,0.30);
+}
+
+:root.theme-latte {
+	--primary: #1e66f5;
+	--primary-hover: #8839ef;
+	--primary-dim: color-mix(in srgb, var(--primary) 14%, transparent);
+	--primary-glow: color-mix(in srgb, var(--primary) 7%, transparent);
+	--danger: #d20f39;
+	--text: #4c4f69;
+	--text-secondary: #5c5f77;
+	--text-muted: #9ca0b0;
+	--bg: #eff1f5;
+	--bg-card: #e6e9ef;
+	--bg-card-solid: #e6e9ef;
+	--bg-input: #ccd0da;
+	--border: #bcc0cc;
+	--border-focus: var(--primary);
+	--log-bg: #bcc0cc;
+	--c-mauve: #8839ef;
+	--c-yellow: #df8e1d;
+	--c-green: #40a02b;
+	--c-peach: #fe640b;
+	--c-sky: #04a5e5;
+	--shadow: 0 1px 4px rgba(76,79,105,0.10);
+}
+
+:root.theme-frappe {
+	--primary: #8caaee;
+	--primary-hover: #ca9ee6;
+	--primary-dim: color-mix(in srgb, var(--primary) 14%, transparent);
+	--primary-glow: color-mix(in srgb, var(--primary) 7%, transparent);
+	--danger: #e78284;
+	--text: #c6d0f5;
+	--text-secondary: #b5bfe2;
+	--text-muted: #949cbb;
+	--bg: #303446;
+	--bg-card: #292b3b;
+	--bg-card-solid: #292b3b;
+	--bg-input: #414559;
+	--border: #414559;
+	--border-focus: var(--primary);
+	--log-bg: #232634;
+	--c-mauve: #ca9ee6;
+	--c-yellow: #e5c890;
+	--c-green: #a6d189;
+	--c-peach: #ef9f76;
+	--c-sky: #99d1db;
+	--shadow: 0 1px 4px rgba(0,0,0,0.20);
+}
+
+:root.theme-macchiato {
+	--primary: #8aadf4;
+	--primary-hover: #c6a0f6;
+	--primary-dim: color-mix(in srgb, var(--primary) 14%, transparent);
+	--primary-glow: color-mix(in srgb, var(--primary) 7%, transparent);
+	--danger: #ed8796;
+	--text: #cad3f5;
+	--text-secondary: #b8c0e0;
+	--text-muted: #939ab7;
+	--bg: #24273a;
+	--bg-card: #1e2030;
+	--bg-card-solid: #1e2030;
+	--bg-input: #363a4f;
+	--border: #363a4f;
+	--border-focus: var(--primary);
+	--log-bg: #181926;
+	--c-mauve: #c6a0f6;
+	--c-yellow: #eed49f;
+	--c-green: #a6da95;
+	--c-peach: #f5a97f;
+	--c-sky: #91d7e3;
+	--shadow: 0 1px 4px rgba(0,0,0,0.25);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,7 +121,7 @@ body::before {
 	left: -10%;
 	width: 60%;
 	height: 60%;
-	background: radial-gradient(circle, rgba(96,165,250,0.1) 0%, transparent 70%);
+	background: radial-gradient(circle, var(--primary-dim) 0%, transparent 70%);
 	pointer-events: none;
 	z-index: 0;
 }
@@ -49,7 +133,7 @@ body::after {
 	right: -10%;
 	width: 50%;
 	height: 50%;
-	background: radial-gradient(circle, rgba(96,165,250,0.07) 0%, transparent 70%);
+	background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
 	pointer-events: none;
 	z-index: 0;
 }
@@ -343,7 +427,7 @@ tr:hover td { background: var(--primary-glow); }
 
 /* ===== Log Viewer ===== */
 .log-viewer {
-	background: #1e293b;
+	background: var(--log-bg);
 	border: 1px solid var(--border);
 	border-radius: var(--radius);
 	padding: 12px;
@@ -354,21 +438,22 @@ tr:hover td { background: var(--primary-glow); }
 	overflow-y: auto;
 	white-space: pre-wrap;
 	word-break: break-all;
+	color: var(--text-secondary);
 }
 
-.log-line { padding: 1px 0; color: #94a3b8; }
-.log-line.info { color: #60a5fa; }
-.log-line.warning { color: #f59e0b; }
-.log-line.error { color: #f87171; }
-.log-line.debug { color: #a78bfa; }
-.log-line.input { color: #64748b; }
+.log-line { padding: 1px 0; color: var(--text-muted); }
+.log-line.info { color: var(--primary); }
+.log-line.warning { color: var(--c-yellow); }
+.log-line.error { color: var(--danger); }
+.log-line.debug { color: var(--c-mauve); }
+.log-line.input { color: var(--text-muted); }
 
 /* ===== Tags ===== */
 .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; }
-.tag-owner { background: var(--primary-dim); color: var(--primary); }
-.tag-op { background: rgba(71,85,105,0.1); color: #475569; }
-.tag-user { background: rgba(71,85,105,0.07); color: #64748b; }
-.tag-blocker { background: rgba(248,113,113,0.12); color: #f87171; }
+.tag-owner { background: color-mix(in srgb, var(--c-mauve) 16%, transparent); color: var(--c-mauve); }
+.tag-op { background: color-mix(in srgb, var(--text-muted) 16%, transparent); color: var(--text-muted); }
+.tag-user { background: color-mix(in srgb, var(--text-muted) 10%, transparent); color: var(--text-muted); }
+.tag-blocker { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
 
 /* ===== Empty ===== */
 .empty-state { text-align: center; padding: 36px 20px; color: var(--text-muted); }
@@ -386,3 +471,35 @@ tr:hover td { background: var(--primary-glow); }
 	.form-row { grid-template-columns: 1fr; }
 	.stats-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ===== Theme Switcher (Catppuccin) ===== */
+.theme-switcher {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 16px;
+	margin-top: auto;
+	border-top: 1px solid var(--border);
+}
+
+.theme-switcher .theme-label {
+	font-size: 10px;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.8px;
+	font-weight: 600;
+	margin-right: auto;
+}
+
+.theme-dot {
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	cursor: pointer;
+	border: 2px solid transparent;
+	padding: 0;
+	transition: transform 0.12s, border-color 0.12s;
+}
+
+.theme-dot:hover { transform: scale(1.15); }
+.theme-dot.active { border-color: var(--text); }
