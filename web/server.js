@@ -249,7 +249,8 @@ async function handleAPI(req, res, url) {
 		// Mod enable/disable
 		const modEnableMatch = pathname.match(/^\/api\/mods\/(.+)\/enable$/);
 		if (modEnableMatch && method === "POST") {
-			const modEntry = modRegistry.list().find(m => m.name === modEnableMatch[1]);
+			const modName = decodeURIComponent(modEnableMatch[1]);
+			const modEntry = modRegistry.list().find(m => m.name === modName);
 			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
 			const r = modRegistry.enable(modEntry.id);
 			if (r.ok) {
@@ -278,7 +279,8 @@ async function handleAPI(req, res, url) {
 		}
 		const modDisableMatch = pathname.match(/^\/api\/mods\/(.+)\/disable$/);
 		if (modDisableMatch && method === "POST") {
-			const modEntry = modRegistry.list().find(m => m.name === modDisableMatch[1]);
+			const modName = decodeURIComponent(modDisableMatch[1]);
+			const modEntry = modRegistry.list().find(m => m.name === modName);
 			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
 			if (modEntry.entry.server) {
 				const sm = ServerModManager._inst();
@@ -312,7 +314,8 @@ async function handleAPI(req, res, url) {
 		// Mod hot reload
 		const modReloadMatch = pathname.match(/^\/api\/mods\/(.+)\/reload$/);
 		if (modReloadMatch && method === "POST") {
-			const modEntry = modRegistry.list().find(m => m.name === modReloadMatch[1]);
+			const modName = decodeURIComponent(modReloadMatch[1]);
+			const modEntry = modRegistry.list().find(m => m.name === modName);
 			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
 			const results = { server: null, client: null };
 			if (modEntry.entry.server) {
@@ -335,7 +338,8 @@ async function handleAPI(req, res, url) {
 		// Mod config
 		const modConfigMatch = pathname.match(/^\/api\/mods\/(.+)\/config$/);
 		if (modConfigMatch && method === "GET") {
-			const modEntry = modRegistry.list().find(m => m.name === modConfigMatch[1]);
+			const modName = decodeURIComponent(modConfigMatch[1]);
+			const modEntry = modRegistry.list().find(m => m.name === modName);
 			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
 			const configPath = path.join(modEntry.path, "config.json");
 			const examplePath = path.join(modEntry.path, "config.example.json");
@@ -349,7 +353,8 @@ async function handleAPI(req, res, url) {
 			return json(res, { ok: true, config: modConfig });
 		}
 		if (modConfigMatch && method === "PUT") {
-			const modEntry = modRegistry.list().find(m => m.name === modConfigMatch[1]);
+			const modName = decodeURIComponent(modConfigMatch[1]);
+			const modEntry = modRegistry.list().find(m => m.name === modName);
 			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
 			const body = await readBody(req);
 			const newConfig = JSON.parse(body);
@@ -361,7 +366,8 @@ async function handleAPI(req, res, url) {
 		// Mod manifest
 		const modManifestMatch = pathname.match(/^\/api\/mods\/(.+)\/manifest$/);
 		if (modManifestMatch && method === "GET") {
-			const modEntry = modRegistry.list().find(m => m.name === modManifestMatch[1]);
+			const modName = decodeURIComponent(modManifestMatch[1]);
+			const modEntry = modRegistry.list().find(m => m.name === modName);
 			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
 			const manifestPath = path.join(modEntry.path, "manifest.json");
 			if (!fs.existsSync(manifestPath)) return json(res, { ok: false, message: "清单文件不存在" }, 404);
@@ -372,7 +378,8 @@ async function handleAPI(req, res, url) {
 		// Mod README
 		const modReadmeMatch = pathname.match(/^\/api\/mods\/(.+)\/readme$/);
 		if (modReadmeMatch && method === "GET") {
-			const modEntry = modRegistry.list().find(m => m.name === modReadmeMatch[1]);
+			const modName = decodeURIComponent(modReadmeMatch[1]);
+			const modEntry = modRegistry.list().find(m => m.name === modName);
 			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
 			const readmePath = path.join(modEntry.path, "README.md");
 			if (!fs.existsSync(readmePath)) return json(res, { ok: false, message: "无 README 文件" });
