@@ -5,6 +5,7 @@ import ConfigField from "../components/ConfigField.vue";
 
 const mods = ref([]);
 const loading = ref(false);
+const reloading = ref({});
 const modal = ref({ open: false, type: "", modName: "", mod: null, config: null, fields: [], manifest: null, readme: "", saving: false, message: "" });
 
 const sortedMods = computed(() => [...mods.value].sort((a, b) => a.name.localeCompare(b.name)));
@@ -33,6 +34,12 @@ async function reloadAll() {
 async function toggleMod(mod) {
 	if (mod.enabled) { await api.disableMod(mod.name); } else { await api.enableMod(mod.name); }
 	mod.enabled = !mod.enabled;
+}
+
+async function reloadMod(mod) {
+	reloading.value[mod.name] = true;
+	try { await api.reloadMod(mod.name); } catch {}
+	reloading.value[mod.name] = false;
 }
 
 function lockScroll() { document.body.classList.add("modal-open"); }
@@ -154,6 +161,9 @@ onBeforeUnmount(unlockScroll);
 					<span v-if="m.author">{{ m.author }}</span>
 				</div>
 				<div class="mod-actions">
+					<button v-if="m.enabled" class="icon-btn" title="重载" @click="reloadMod(m)" :disabled="reloading[m.name]">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+					</button>
 					<button class="icon-btn" title="清单" @click="openManifest(m)">
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
 					</button>
@@ -220,6 +230,8 @@ onBeforeUnmount(unlockScroll);
 	transition: all 0.15s;
 }
 .icon-btn:hover { background: var(--primary-dim); color: var(--primary); }
+.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.icon-btn:disabled:hover { background: transparent; color: var(--text-secondary); }
 .icon-btn svg { width: 16px; height: 16px; }
 
 .card-header { display: flex; flex-direction: row; align-items: center; flex-wrap: nowrap; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); gap: 8px; }

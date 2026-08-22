@@ -7,7 +7,8 @@ import { config, reloadConfig, eventBus, ServerModManager, ClientModManager, mod
 import Current from "../lib/current.js";
 import PermissionManager from "../lib/permission.js";
 import Command from "../lib/command.js";
-import * as shared from "../lib/shared.js";
+import { logger } from "../lib/logger.js";
+import { collectCommands as collectTerminalCommands } from "../lib/readline.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,8 +25,8 @@ const AUTH_LOCKOUT_MS = authConfig.lockoutMs || 60000;
 let logBuffer = [];
 const LOG_BUFFER_MAX = 500;
 
-const originalLog = shared.logger.log.bind(shared.logger);
-shared.logger.log = function (message, type) {
+const originalLog = logger.log.bind(logger);
+logger.log = function (message, type) {
 	originalLog(message, type);
 	if (type && ["info", "warning", "error", "debug"].includes(type)) {
 		const entry = { time: Date.now(), type, message };
@@ -56,15 +57,15 @@ function checkAuth(ip, password) {
 	const state = getAuthState(ip);
 	if (state.lockedUntil && Date.now() < state.lockedUntil) {
 		const waitSec = Math.ceil((state.lockedUntil - Date.now()) / 1000);
-		shared.logger.warning(`WebUI 登录锁定中: IP=${ip}, 剩余 ${waitSec}s`);
+		logger.warning(`WebUI 登录锁定中: IP=${ip}, 剩余 ${waitSec}s`);
 		return { ok: false, locked: true, waitSec };
 	}
 	if (password !== AUTH_PASSWORD) {
 		state.attempts.push(Date.now());
-		shared.logger.warning(`WebUI 登录失败: IP=${ip} (已尝试 ${state.attempts.length}/${AUTH_MAX_ATTEMPTS})`);
+		logger.warning(`WebUI 登录失败: IP=${ip} (已尝试 ${state.attempts.length}/${AUTH_MAX_ATTEMPTS})`);
 		if (state.attempts.length >= AUTH_MAX_ATTEMPTS) {
 			state.lockedUntil = Date.now() + AUTH_LOCKOUT_MS;
-			shared.logger.error(`WebUI 登录锁定: IP=${ip} 已被锁定 ${AUTH_LOCKOUT_MS / 1000}s`);
+			logger.error(`WebUI 登录锁定: IP=${ip} 已被锁定 ${AUTH_LOCKOUT_MS / 1000}s`);
 			return { ok: false, locked: true, waitSec: Math.ceil(AUTH_LOCKOUT_MS / 1000) };
 		}
 		return { ok: false, locked: false, remaining: AUTH_MAX_ATTEMPTS - state.attempts.length };
@@ -155,7 +156,7 @@ async function handleAPI(req, res, url) {
 		const ip = req.socket.remoteAddress || "未知";
 		const result = checkAuth(ip, password);
 		if (result.ok) {
-			shared.logger.info(`WebUI 登录成功: IP=${ip}`);
+			logger.info(`WebUI 登录成功: IP=${ip}`);
 			return json(res, { ok: true, token: AUTH_PASSWORD });
 		}
 		return json(res, { ok: false, locked: result.locked, remaining: result.remaining, waitSec: result.waitSec }, 401);
@@ -248,17 +249,87 @@ async function handleAPI(req, res, url) {
 		// Mod enable/disable
 		const modEnableMatch = pathname.match(/^\/api\/mods\/(.+)\/enable$/);
 		if (modEnableMatch && method === "POST") {
-			const modId = modRegistry.list().find(m => m.name === modEnableMatch[1])?.id;
-			if (!modId) return json(res, { ok: false, message: "模组未找到" }, 404);
-			const r = modRegistry.enable(modId);
+			const modEntry = modRegistry.list().find(m => m.name === modEnableMatch[1]);
+			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
+			const r = modRegistry.enable(modEntry.id);
+			if (r.ok) {
+				try {
+					if (modEntry.entry.server) {
+						const sm = ServerModManager._inst();
+						if (sm) await sm.reload(modEntry.name);
+					}
+					if (modEntry.entry.client) {
+						const ts = Date.now();
+						const modPath = path.join(modEntry.path, modEntry.entry.client);
+						const modModule = await import(`${modPath}?t=${ts}`);
+						if (modModule.default) {
+							modEntry.clientClass = modModule.default;
+							ClientModManager.loadedMod[modEntry.name] = modModule.default;
+							for (const [, mgr] of Current.clientMods) {
+								if (!mgr || mgr.modInstances[modEntry.name]) continue;
+								try { mgr._instantiateMod(modEntry.name, modModule.default); mgr._collectCommands(); } catch {}
+							}
+						}
+					}
+				} catch (e) { logger.error(`Mod ${modEntry.name} 启用热加载失败: ${e.message}`); }
+			}
+			collectTerminalCommands(ServerModManager, ClientModManager);
 			return json(res, r);
 		}
 		const modDisableMatch = pathname.match(/^\/api\/mods\/(.+)\/disable$/);
 		if (modDisableMatch && method === "POST") {
-			const modId = modRegistry.list().find(m => m.name === modDisableMatch[1])?.id;
-			if (!modId) return json(res, { ok: false, message: "模组未找到" }, 404);
-			const r = modRegistry.disable(modId);
+			const modEntry = modRegistry.list().find(m => m.name === modDisableMatch[1]);
+			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
+			if (modEntry.entry.server) {
+				const sm = ServerModManager._inst();
+				if (sm?.modInstances[modEntry.name]) {
+					const dm = sm._resolveMethod(sm.modInstances[modEntry.name], "onDestroy") || sm._resolveMethod(sm.modInstances[modEntry.name], "destroy");
+					if (dm) { try { dm.fn.apply(dm.ctx); } catch {} }
+					eventBus.clearMod(modEntry.name);
+					delete sm.modInstances[modEntry.name];
+					delete ServerModManager.loadedMod[modEntry.name];
+				}
+			}
+			if (modEntry.entry.client) {
+				for (const [, mgr] of Current.clientMods) {
+					if (mgr?.modInstances[modEntry.name]) {
+						const dm = mgr._resolveModMethod(mgr.modInstances[modEntry.name], "onDestroy") || mgr._resolveModMethod(mgr.modInstances[modEntry.name], "destroy");
+						if (dm) { try { dm.fn.apply(dm.ctx); } catch {} }
+						if (mgr.sapi && typeof mgr.sapi.clearMod === "function") mgr.sapi.clearMod(modEntry.name);
+						if (mgr.client.utils && typeof mgr.client.utils.removeOwner === "function") mgr.client.utils.removeOwner(modEntry.name);
+						delete mgr.modInstances[modEntry.name];
+						delete ClientModManager.loadedMod[modEntry.name];
+						mgr.client[modEntry.name] = null;
+						mgr._collectCommands();
+					}
+				}
+			}
+			const r = modRegistry.disable(modEntry.id);
+			collectTerminalCommands(ServerModManager, ClientModManager);
 			return json(res, r);
+		}
+
+		// Mod hot reload
+		const modReloadMatch = pathname.match(/^\/api\/mods\/(.+)\/reload$/);
+		if (modReloadMatch && method === "POST") {
+			const modEntry = modRegistry.list().find(m => m.name === modReloadMatch[1]);
+			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
+			const results = { server: null, client: null };
+			if (modEntry.entry.server) {
+				const sm = ServerModManager._inst();
+				results.server = sm ? await sm.reload(modEntry.name) : { success: false, message: "服务端 Mod 管理器未初始化" };
+			}
+			if (modEntry.entry.client) {
+				const successes = [], faileds = [];
+				for (const [, mgr] of Current.clientMods) {
+					if (!mgr || typeof mgr.reload !== "function") continue;
+					const r = await mgr.reload(modEntry.name);
+					r.success ? successes.push("ok") : faileds.push("fail");
+				}
+				results.client = { success: successes.length, failed: faileds.length };
+			}
+			collectTerminalCommands(ServerModManager, ClientModManager);
+			return json(res, { ok: true, results });
 		}
 
 		// Mod config
@@ -417,7 +488,7 @@ export function startWebServer() {
 		server.listen(WEB_PORT, "0.0.0.0", () => {
 			const isCustom = config.web?.auth?.password;
 			const source = isCustom ? "配置文件" : "随机生成";
-			shared.logger.info(`WebUI 已启动: http://127.0.0.1:${WEB_PORT}/login?pwd=${AUTH_PASSWORD} [${source}]`);
+			logger.info(`WebUI 已启动: http://127.0.0.1:${WEB_PORT}/login?pwd=${AUTH_PASSWORD} [${source}]`);
 			resolve();
 		});
 	});

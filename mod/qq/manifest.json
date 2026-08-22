@@ -1,9 +1,9 @@
 {
-	"name": "qq",
-	"description": "",
+	"name": "QQ-MC Bridge",
+	"description": "为 QQ 与 MC 消息互通提供桥梁",
 	"version": "1.0.0",
-	"author": "",
-	"enabled": true,
+	"author": "StarAwA117",
+	"enabled": false,
 	"entry": {
 		"server": "main.js",
 		"client": "commands.js"

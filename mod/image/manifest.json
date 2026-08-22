@@ -1,11 +1,11 @@
 {
-  "name": "image",
-  "description": "",
-  "version": "1.0.0",
-  "author": "",
-  "enabled": true,
-  "entry": {
-    "server": null,
-    "client": "main.js"
-  }
+	"name": "Image Mod",
+	"description": "在任意环境下在 MCBE 导入图片为像素画",
+	"version": "1.0.0",
+	"author": "StarAwA117",
+	"enabled": false,
+	"entry": {
+		"server": null,
+		"client": "main.js"
+	}
 }

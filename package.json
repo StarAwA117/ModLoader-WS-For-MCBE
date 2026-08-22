@@ -1,13 +1,12 @@
 {
-	"name": "starws",
+	"name": "modloader",
 	"version": "1.0.0",
 	"type": "module",
 	"bin": {
-		"starws": "ws.js"
+		"modloader": "main.js"
 	},
 	"scripts": {
-		"prestart": "node setup.js",
-		"start": "node ws.js"
+		"start": "node main.js"
 	},
 	"dependencies": {
 		"jpeg-js": "^0.4.4",

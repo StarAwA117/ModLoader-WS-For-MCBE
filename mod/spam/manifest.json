@@ -1,11 +1,11 @@
 {
-  "name": "spam",
-  "description": "终端刷屏命令（c: 开头）",
-  "version": "1.0.0",
-  "author": "StarWS",
-  "enabled": true,
-  "entry": {
-    "server": "main.js",
-    "client": null
-  }
+	"name": "spam",
+	"description": "提供刷屏、广告与攻击服务",
+	"version": "1.0.0",
+	"author": "StarAwA117",
+	"enabled": false,
+	"entry": {
+		"server": "main.js",
+		"client": null
+	}
 }

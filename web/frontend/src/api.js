@@ -44,6 +44,7 @@ export const api = {
 	reloadAllMods: () => request("/mods/reload-all", { method: "POST" }),
 	enableMod: (name) => request(`/mods/${encodeURIComponent(name)}/enable`, { method: "POST" }),
 	disableMod: (name) => request(`/mods/${encodeURIComponent(name)}/disable`, { method: "POST" }),
+	reloadMod: (name) => request(`/mods/${encodeURIComponent(name)}/reload`, { method: "POST" }),
 	getModConfig: (name) => request(`/mods/${encodeURIComponent(name)}/config`),
 	saveModConfig: (name, cfg) => request(`/mods/${encodeURIComponent(name)}/config`, { method: "PUT", body: JSON.stringify(cfg) }),
 	getModManifest: (name) => request(`/mods/${encodeURIComponent(name)}/manifest`),

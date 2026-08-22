@@ -20,7 +20,7 @@ export default class QQ {
 		if (!this.config.enabled) return;
 
 		if (!this.config.accessToken) {
-			QQ.shared.logger.warning("未配置 QQ accessToken，QQ 连接可能被服务端拒绝");
+			this.logger.warning("未配置 QQ accessToken，QQ 连接可能被服务端拒绝");
 		}
 
 		napcat = new NCWebsocket({
@@ -53,14 +53,14 @@ export default class QQ {
 		});
 
 		napcat.on("socket.close", () => {
-			QQ.shared.logger.warning("QQ 连接已断开");
+			this.logger.warning("QQ 连接已断开");
 		});
 
 		napcat.connect().then(() => {
-			QQ.shared.logger.info("QQ 已连接");
+			this.logger.info("QQ 已连接");
 		}).catch((e) => {
-			QQ.shared.logger.error("QQ 连接失败");
-			QQ.shared.logger.debug(e.message);
+			this.logger.error("QQ 连接失败");
+			this.logger.debug(e.message);
 		});
 	}
 
@@ -122,8 +122,8 @@ export default class QQ {
 			});
 			return true;
 		} catch (e) {
-			QQ.shared.logger.error("QQ 消息发送失败");
-			QQ.shared.logger.debug(e.message);
+			this.logger.error("QQ 消息发送失败");
+			this.logger.debug(e.message);
 			return false;
 		}
 	}

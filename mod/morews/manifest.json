@@ -1,11 +1,11 @@
 {
-  "name": "morews",
-  "description": "",
-  "version": "1.0.0",
-  "author": "",
-  "enabled": true,
-  "entry": {
-    "server": null,
-    "client": "main.js"
-  }
+	"name": "MoreWS",
+	"description": "允许 MCBE 接入更多的 WebSocket",
+	"version": "1.0.0",
+	"author": "StarAwA117",
+	"enabled": false,
+	"entry": {
+		"server": null,
+		"client": "main.js"
+	}
 }

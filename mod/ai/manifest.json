@@ -1,11 +1,11 @@
 {
-  "name": "ai",
-  "description": "",
-  "version": "1.0.0",
-  "author": "",
-  "enabled": true,
-  "entry": {
-    "server": "main.js",
-    "client": "main.js"
-  }
+	"name": "AI Chat & Command",
+	"description": "允许使用 AI 在 MCBE 聊天或执行命令",
+	"version": "1.0.0",
+	"author": "StarAwA117",
+	"enabled": true,
+	"entry": {
+		"server": "main.js",
+		"client": "main.js"
+	}
 }
