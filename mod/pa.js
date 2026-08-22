@@ -1,3 +1,15 @@
+// ============================================================
+// PiAI Mod - 基于 pi coding agent 的 AI 助手
+// ============================================================
+// 使用须知:
+// 1. 本 Mod 依赖本机已安装 pi coding agent 环境，并自动加载 pi-bansos + pi-persona 扩展。
+// 2. 请在 config.json 的 "pa" 段中配置模型、上下文窗口等参数，同名环境变量可覆盖配置。
+// 3. 若使用免费模型（如 deepseek-v4-flash-free），额度耗尽后会返回 429，建议切换至其他模型。
+// 4. AI 输出受严格规则约束，仅允许文字回复，严禁执行 rm/mkfs/dd/shutdown/reboot 等危险命令。
+// 5. 所有游戏内对话会话将保存在本 Mod 目录下的 pa-sessions/ 中，便于追踪与续接。
+// 详细配置项见 config.example.json 与各段注释。
+// ============================================================
+
 import { spawn, spawnSync } from "child_process";
 import http from "http";
 import fs from "fs";
