@@ -8,7 +8,10 @@ const loading = ref(false);
 const reloading = ref({});
 const modal = ref({ open: false, type: "", modName: "", mod: null, config: null, fields: [], manifest: null, readme: "", saving: false, message: "" });
 
-const sortedMods = computed(() => [...mods.value].sort((a, b) => a.name.localeCompare(b.name)));
+const sortedMods = computed(() => [...mods.value].sort((a, b) => {
+	if (a.enabled !== b.enabled) return b.enabled - a.enabled;
+	return a.name.localeCompare(b.name);
+}));
 
 async function refresh() {
 	const data = await api.getMods();
