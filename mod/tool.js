@@ -2,7 +2,6 @@ import { exec } from "child_process";
 import Command from "../lib/command.js";
 import Current from "../lib/current.js";
 import PermissionManager from "../lib/permission.js";
-import QQ from "./qq/main.js";
 import { ServerModManager, ClientModManager, reloadConfig } from "../lib/mods.js";
 
 export default class Tool {
@@ -208,8 +207,8 @@ export default class Tool {
 					} catch {}
 
 					Current.client = this.client;
-					QQ.setMainClient(this.client);
-					// 主客户端切换后重新挂载服务端 Mod 的 SAPI
+					// 主客户端切换后通知所有服务端 Mod 并重新挂载 SAPI
+					ServerModManager.onMainClientSwitch(this.client);
 					ServerModManager.attachMainClient(this.client);
 
 					this.client.tellAll(`§eTool | §fMove > §i主客户端已切换至 ${sender}`);

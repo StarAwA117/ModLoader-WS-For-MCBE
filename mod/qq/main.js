@@ -78,14 +78,17 @@ export default class QQ {
 		return mainClient;
 	}
 
-	// 主客户端接入/断开钩子（由 lib/mods.js 的 ServerModManager 分发）
-	// 修复：主客户端断开重连后 mainClient 仍指向已断开 socket 的问题
+	// 主客户端接入/断开/切换钩子（由 lib/mods.js 的 ServerModManager 分发）
 	static onMainClientConnect(client) {
 		this.setMainClient(client);
 	}
 
 	static onMainClientDisconnect() {
 		this.setMainClient(null);
+	}
+
+	static onMainClientSwitch(client) {
+		this.setMainClient(client);
 	}
 
 	// 手动自愈检测：强制断开并重建连接，再用真实 API 请求验证链路是否畅通
