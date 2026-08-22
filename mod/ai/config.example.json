@@ -1,0 +1,31 @@
+{
+  "options": {
+    "baseURL": "https://api.openai.com/v1",
+    "apiKey": "sk-your-api-key-here"
+  },
+  "models": {
+    "chat": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "max_tokens": 512,
+      "stream": false
+    },
+    "command": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a Minecraft command assistant. Output valid JSON only. Schema: {\"message\":\"string\",\"commands\":[\"string\"]}."
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "max_tokens": 1024,
+      "stream": false
+    }
+  },
+  "chatCooldown": 5000
+}

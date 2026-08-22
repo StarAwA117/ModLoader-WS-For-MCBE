@@ -4,78 +4,64 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { StringDecoder } from "string_decoder";
-import { config } from "../lib/mods.js";
-import PermissionManager from "../lib/permission.js";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const { commandPrefix } = config;
-
 // ===== pi 配置 =====
-// 可调参数集中在 config.json 的 "pa" 段(同名环境变量优先级更高)
-const PA_CONFIG = (config && typeof config.pa === "object") ? config.pa : {};
+// 由 _init() 在注入后延迟初始化
+let PA_CONFIG = {};
+let PI_BIN, AI_MODEL, AI_MODEL_ID;
+let LOCAL_PROXY_START = 18080, LOCAL_PROXY_END = 18110;
+let LOCAL_PROVIDER = "bansos-local";
+let MODELS_FILE, SESSION_DIR;
+let CONTEXT_WINDOW, TOKEN_LIMIT, PROMPT_TIMEOUT, RPC_START_TIMEOUT, WARMUP_DELAY, THINKING;
+let BANSOS_EXT, PERSONA_EXT, LOADED_EXTS;
+let AI_STYLE;
+let idleEnabled = true;
+const IDLE_MESSAGES = ["xxx"];
 
-// pi 可执行文件(可通过环境变量 PA_PI_BIN 覆盖)
-const PI_BIN = process.env.PA_PI_BIN || "pi";
-// 模型: 在 config.json 的 pa.model 中定义, 可用环境变量 PA_MODEL 覆盖
-// 注意: deepseek-v4-flash-free 免费额度容易耗尽(429 FreeUsageLimitError),
-// 此时换 nemotron-3-ultra-free 等其他模型即可。
-const AI_MODEL = process.env.PA_MODEL || PA_CONFIG.model || "bansos/nemotron-3-ultra-free";
-// 模型 ID(不带 provider 前缀)
-const AI_MODEL_ID = AI_MODEL.includes("/") ? AI_MODEL.split("/").pop() : AI_MODEL;
-// 扫描本机 bansos 代理端口范围(终端 pi 的代理不固定占 18080,
-// 谁先启动谁占低端口, 所以要扫描并探测哪个代理对当前模型是健康的)
-const LOCAL_PROXY_START = 18080;
-const LOCAL_PROXY_END = 18110;
-// models.json 里注册的 provider(动态指向探测到的健康代理端口)
-const LOCAL_PROVIDER = "bansos-local";
-// 全局 models.json 路径(pi 启动时自动加载其中的自定义 provider)
-const MODELS_FILE = path.join(os.homedir(), ".pi", "agent", "models.json");
-// 会话保存目录: 所有游戏内对话保存在这里, 便于定位/继续会话
-const SESSION_DIR = path.join(__dirname, "pa-sessions");
-// 上下文窗口(tokens): 在 config.json 的 pa.contextWindow 中定义(默认 1000000)
-const CONTEXT_WINDOW = Number(PA_CONFIG.contextWindow) > 0
-	? Math.floor(Number(PA_CONFIG.contextWindow))
-	: 1000000;
-// 累计 token 超过该阈值 => 自动开启新会话
-// 优先级: 环境变量 PA_TOKEN_LIMIT > config.json pa.tokenLimit > 上下文窗口 * pa.tokenLimitRatio(默认 0.7)
-const TOKEN_LIMIT = Number(process.env.PA_TOKEN_LIMIT)
-	|| (Number(PA_CONFIG.tokenLimit) > 0 ? Math.floor(Number(PA_CONFIG.tokenLimit)) : 0)
-	|| Math.floor(CONTEXT_WINDOW * (Number(PA_CONFIG.tokenLimitRatio) > 0 ? Number(PA_CONFIG.tokenLimitRatio) : 0.7));
-// 单次对话超时(ms)
-const PROMPT_TIMEOUT = Number(process.env.PA_TIMEOUT) || 300000;
-// RPC 进程启动(含模型健康检查)超时(ms)
-const RPC_START_TIMEOUT = Number(process.env.PA_START_TIMEOUT) || 90000;
-// 预热延迟: 连接后后台自动启动常驻进程, 首次对话不用等启动
-const WARMUP_DELAY = Number(process.env.PA_WARMUP_MS) || 3000;
-// 思考级别: off | minimal | low | medium | high | xhigh (降低延迟)
-const THINKING = process.env.PA_THINKING || "low";
+class PA {
+	static _initialized = false;
 
-// ===== 扩展加载 =====
-// 只加载指定的扩展(pi-bansos + pi-persona), 跳过其他扩展以加快启动
-// 通用: 解析一个全局 npm 包的扩展入口路径
-function resolveExtPath(pkgName, relPath, envOverride) {
-	if (envOverride && fs.existsSync(envOverride)) return envOverride;
-	const candidates = [];
-	try {
-		const res = spawnSync("npm", ["root", "-g"], { timeout: 5000, encoding: "utf8" });
-		const root = (res.stdout || "").trim();
-		if (root) candidates.push(path.join(root, pkgName, relPath));
-	} catch {}
-	candidates.push(path.join("/usr/lib/node_modules", pkgName, relPath));
-	for (const c of candidates) {
-		if (fs.existsSync(c)) return c;
-	}
-	return null;
-}
-const BANSOS_EXT = resolveExtPath("pi-bansos", "extensions/index.ts", process.env.PA_BANSOS_EXT);
-const PERSONA_EXT = resolveExtPath("@smoose/pi-persona", "extensions/index.ts", process.env.PA_PERSONA_EXT);
-// 最终要加载的扩展列表(按顺序: bansos -> persona)
-const LOADED_EXTS = [BANSOS_EXT, PERSONA_EXT].filter(Boolean);
+	static _init(config) {
+		if (PA._initialized) return;
+		PA._initialized = true;
 
-const AI_STYLE = `你是Minecraft游戏里的AI助手(基于 pi coding agent)。规则：
+		const paCfg = (config && typeof config.pa === "object") ? config.pa : {};
+		PI_BIN = process.env.PA_PI_BIN || "pi";
+		AI_MODEL = process.env.PA_MODEL || paCfg.model || "bansos/nemotron-3-ultra-free";
+		AI_MODEL_ID = AI_MODEL.includes("/") ? AI_MODEL.split("/").pop() : AI_MODEL;
+		MODELS_FILE = path.join(os.homedir(), ".pi", "agent", "models.json");
+		SESSION_DIR = path.join(__dirname, "pa-sessions");
+		CONTEXT_WINDOW = Number(paCfg.contextWindow) > 0 ? Math.floor(Number(paCfg.contextWindow)) : 1000000;
+		TOKEN_LIMIT = Number(process.env.PA_TOKEN_LIMIT)
+			|| (Number(paCfg.tokenLimit) > 0 ? Math.floor(Number(paCfg.tokenLimit)) : 0)
+			|| Math.floor(CONTEXT_WINDOW * (Number(paCfg.tokenLimitRatio) > 0 ? Number(paCfg.tokenLimitRatio) : 0.7));
+		PROMPT_TIMEOUT = Number(process.env.PA_TIMEOUT) || 300000;
+		RPC_START_TIMEOUT = Number(process.env.PA_START_TIMEOUT) || 90000;
+		WARMUP_DELAY = Number(process.env.PA_WARMUP_MS) || 3000;
+		THINKING = process.env.PA_THINKING || "low";
+
+		// 扩展路径解析
+		function resolveExtPath(pkgName, relPath, envOverride) {
+			if (envOverride && fs.existsSync(envOverride)) return envOverride;
+			const candidates = [];
+			try {
+				const res = spawnSync("npm", ["root", "-g"], { timeout: 5000, encoding: "utf8" });
+				const root = (res.stdout || "").trim();
+				if (root) candidates.push(path.join(root, pkgName, relPath));
+			} catch {}
+			candidates.push(path.join("/usr/lib/node_modules", pkgName, relPath));
+			for (const c of candidates) { if (fs.existsSync(c)) return c; }
+			return null;
+		}
+		BANSOS_EXT = resolveExtPath("pi-bansos", "extensions/index.ts", process.env.PA_BANSOS_EXT);
+		PERSONA_EXT = resolveExtPath("@smoose/pi-persona", "extensions/index.ts", process.env.PA_PERSONA_EXT);
+		LOADED_EXTS = [BANSOS_EXT, PERSONA_EXT].filter(Boolean);
+
+		AI_STYLE = `你是Minecraft游戏里的AI助手(基于 pi coding agent)。规则：
 1. 只用文字回答。严禁使用 rm、mkfs、dd、shutdown、reboot 这类危险命令。
 2. 每次输出的话不要太多，防止token消耗速度快，也避免刷屏。
 3. 如果需要在游戏里执行Minecraft基岩版命令，用 [cmd] 开头写命令，例如：
@@ -87,16 +73,10 @@ execute as 人 at xxx run 要执行的命令
 deop 撤回op权限, op 给予op权限。
 4. 不要用代码块包裹 [cmd]
 5. 主人:暂未定义`;
+	}
 
-
-const IDLE_MESSAGES = [
-	"xxx"
-];
-
-let idleEnabled = true;
-
-class PA {
 	constructor(client) {
+		PA._init(client.config || {});
 		this.client = client;
 		// 每个玩家 -> 会话文件路径(null 表示尚未开始会话)
 		this.sessions = new Map();
@@ -586,9 +566,9 @@ class PA {
 		return {
 			normal: [
 				{
-					name: `${commandPrefix}pa`,
+					name: `${this.Command.commandPrefix}pa`,
 					execute: (sender, msg) => {
-						const prefix = `${commandPrefix}pa `;
+						const prefix = `${this.Command.commandPrefix}pa `;
 						if (!msg.startsWith(prefix)) return false;
 						const prompt = msg.slice(prefix.length).trim();
 						if (!prompt) {
@@ -606,17 +586,17 @@ class PA {
 					}
 				},
 				{
-					name: `${commandPrefix}pa:new`,
+					name: `${this.Command.commandPrefix}pa:new`,
 					execute: (sender, msg) => {
-						if (msg !== `${commandPrefix}pa:new`) return false;
+						if (msg !== `${this.Command.commandPrefix}pa:new`) return false;
 						this._startNewSession(sender, true);
 						return { status: true };
 					}
 				},
 				{
-					name: `${commandPrefix}pa:info`,
+					name: `${this.Command.commandPrefix}pa:info`,
 					execute: (sender, msg) => {
-						if (msg !== `${commandPrefix}pa:info`) return false;
+						if (msg !== `${this.Command.commandPrefix}pa:info`) return false;
 						const file = this._getSessionFile(sender);
 						const tokens = this.tokenUsage.get(sender) || 0;
 						const maxTokens = this.maxTokenUsage.get(sender) || 0;
@@ -639,9 +619,9 @@ class PA {
 					}
 				},
 				{
-					name: `${commandPrefix}pa:idle`,
+					name: `${this.Command.commandPrefix}pa:idle`,
 					execute: (sender, msg) => {
-						const prefix = `${commandPrefix}pa:idle`;
+						const prefix = `${this.Command.commandPrefix}pa:idle`;
 						if (msg === prefix) {
 							idleEnabled = !idleEnabled;
 							if (this.client) this.client.tellAll(`§apa§r | idle > §7空闲消息已${idleEnabled ? "开启" : "关闭"} 喵~`);
@@ -658,9 +638,9 @@ class PA {
 			],
 			owner: [
 				{
-					name: `${commandPrefix}pa:status`,
+					name: `${this.Command.commandPrefix}pa:status`,
 					execute: (sender, msg) => {
-						if (msg !== `${commandPrefix}pa:status`) return false;
+						if (msg !== `${this.Command.commandPrefix}pa:status`) return false;
 						const file = this._getSessionFile(sender);
 						if (file) {
 							if (this.client) this.client.tellAll(`§apa§r | status > §7正在用对话: ${path.basename(file)} 喵`);
@@ -671,9 +651,9 @@ class PA {
 					}
 				},
 				{
-					name: `${commandPrefix}pa:session`,
+					name: `${this.Command.commandPrefix}pa:session`,
 					execute: (sender, msg) => {
-						const prefix = `${commandPrefix}pa:session`;
+						const prefix = `${this.Command.commandPrefix}pa:session`;
 						if (msg !== prefix && msg !== `${prefix} clear`) return false;
 						// 清空所有会话
 						if (msg === `${prefix} clear`) {

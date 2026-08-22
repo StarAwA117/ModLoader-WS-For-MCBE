@@ -1,4 +1,3 @@
-import Command from "../lib/command.js";
 
 const FILL_LIMIT = 32767;
 const CHUNK = 16;
@@ -76,7 +75,7 @@ export default class Position {
 	onCommand() {
 		return {
 			op: [
-				Command.create("p:a", "设置 A 点坐标（可选 X Y Z，缺省则取自身坐标）")
+this.Command.create("p:a", "设置 A 点坐标（可选 X Y Z，缺省则取自身坐标）")
 					.addOptionalInteger("X")
 					.addOptionalInteger("Y")
 					.addOptionalInteger("Z")
@@ -105,7 +104,7 @@ export default class Position {
 						this.client.tellAll(`§ePosition | §fPosA > §i已记录坐标 ${this.posA.x} ${this.posA.y} ${this.posA.z}`);
 					}),
 
-				Command.create("p:b", "设置 B 点坐标（可选 X Y Z，缺省则取自身坐标）")
+this.Command.create("p:b", "设置 B 点坐标（可选 X Y Z，缺省则取自身坐标）")
 					.addOptionalInteger("X")
 					.addOptionalInteger("Y")
 					.addOptionalInteger("Z")
@@ -134,7 +133,7 @@ export default class Position {
 						this.client.tellAll(`§ePosition | §fPosB > §i已记录坐标 ${this.posB.x} ${this.posB.y} ${this.posB.z}`);
 					}),
 
-				Command.create("p:distance", "计算 A B 两点间的距离（保留 3 位小数）")
+this.Command.create("p:distance", "计算 A B 两点间的距离（保留 3 位小数）")
 					.setFunc((sender) => {
 						if (!this.posA || !this.posB) {
 							this.client.tell("§cPosition | §fError > §i请先设置 A 点和 B 点", sender);
@@ -147,7 +146,7 @@ export default class Position {
 						this.client.tellAll(`§ePosition | §fDistance > §i${dist}`);
 					}),
 
-				Command.create("p:offset", "计算 B 点相对于 A 点的偏移量")
+this.Command.create("p:offset", "计算 B 点相对于 A 点的偏移量")
 					.setFunc((sender) => {
 						if (!this.posA || !this.posB) {
 							this.client.tell("§cPosition | §fError > §i请先设置 A 点和 B 点", sender);
@@ -159,7 +158,7 @@ export default class Position {
 						this.client.tellAll(`§ePosition | §fOffset > §iX ${ox}  Y ${oy}  Z ${oz}`);
 					}),
 
-				Command.create("p:fill", "填充 A B 两点间区域（必填方块 ID，选填 replace 目标方块 ID）")
+this.Command.create("p:fill", "填充 A B 两点间区域（必填方块 ID，选填 replace 目标方块 ID）")
 					.addString("填充方块 ID", false)
 					.addOptionalString("替换目标方块 ID")
 					.setFunc(async (sender, fillBlock, replaceBlock) => {
@@ -170,7 +169,7 @@ export default class Position {
 						await this._withJob(sender, "fill", () => this._execFill(sender, fillBlock, replaceBlock));
 					}),
 
-				Command.create("p:copy", "复制 A B 两点间区域")
+this.Command.create("p:copy", "复制 A B 两点间区域")
 					.setFunc(async (sender) => {
 						if (!this.posA || !this.posB) {
 							this.client.tell("§cPosition | §fError > §i请先设置 A 点和 B 点", sender);
@@ -179,7 +178,7 @@ export default class Position {
 						await this._withJob(sender, "copy", () => this._execCopy(sender));
 					}),
 
-				Command.create("p:paste", "粘贴复制的结构（可选 X Y Z，缺省取自身坐标）")
+this.Command.create("p:paste", "粘贴复制的结构（可选 X Y Z，缺省取自身坐标）")
 					.addOptionalInteger("X")
 					.addOptionalInteger("Y")
 					.addOptionalInteger("Z")
@@ -207,7 +206,7 @@ export default class Position {
 						await this._withJob(sender, "paste", () => this._execPaste(sender, origin));
 					}),
 
-				Command.create("p:cut", "剪切 A B 两点间区域（复制后填充空气）")
+this.Command.create("p:cut", "剪切 A B 两点间区域（复制后填充空气）")
 					.setFunc(async (sender) => {
 						if (!this.posA || !this.posB) {
 							this.client.tell("§cPosition | §fError > §i请先设置 A 点和 B 点", sender);
@@ -221,7 +220,7 @@ export default class Position {
 						});
 					}),
 
-				Command.create("p:cancel", "中断当前操作")
+this.Command.create("p:cancel", "中断当前操作")
 					.setFunc((sender) => {
 						if (this.job) {
 							this.job.cancelled = true;
@@ -231,7 +230,7 @@ export default class Position {
 						}
 					}),
 
-				Command.create("p:status", "查看当前任务进度")
+this.Command.create("p:status", "查看当前任务进度")
 					.setFunc((sender) => {
 						if (!this.job) {
 							this.client.tell("§cPosition | §fError > §i没有进行中的操作", sender);
@@ -265,7 +264,7 @@ export default class Position {
 						this.client.tellAll(msg);
 					}),
 
-				Command.create("p:show", "显示当前 A B 点坐标")
+this.Command.create("p:show", "显示当前 A B 点坐标")
 					.setFunc((sender) => {
 						const a = this.posA;
 						const b = this.posB;

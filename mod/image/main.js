@@ -4,8 +4,6 @@ import { fileURLToPath } from "url";
 import { execSync, spawnSync } from "child_process";
 import { PNG } from "pngjs";
 import jpeg from "jpeg-js";
-import { config } from "../../lib/mods.js";
-import Command from "../../lib/command.js";
 
 const MAX_IMAGE_DIM = 256;
 const MAX_CHUNKS = 100;
@@ -376,7 +374,7 @@ export default class ImageMod {
 	onCommand() {
 		return {
 			op: [
-				Command.create("i:create", "将图片转换为像素画")
+this.Command.create("i:create", "将图片转换为像素画")
 					.addString("图片文件名", false)
 					.addEnum(["x", "y", "z"], "生成方向 (x=默认 y=直立 z=旋转)", true)
 					.addOptionalFloat("X")
@@ -390,7 +388,7 @@ export default class ImageMod {
 						await this.create(fileName, sender, dir, x, y, z);
 					}),
 
-				Command.create("i:raw", "将图片转换为像素画（原始尺寸，仅支持 x/z）")
+this.Command.create("i:raw", "将图片转换为像素画（原始尺寸，仅支持 x/z）")
 					.addString("图片文件名", false)
 					.addEnum(["x", "z"], "生成方向 (x=默认 z=旋转)", true)
 					.addOptionalFloat("X")
@@ -404,7 +402,7 @@ export default class ImageMod {
 						await this.createRaw(fileName, sender, dir, x, y, z);
 					}),
 
-				Command.create("i:y", "确认转换操作")
+this.Command.create("i:y", "确认转换操作")
 					.setFunc(async (sender) => {
 						if (!this.pending) {
 							this.client.tell("§cImage | §fError > §i没有待确认的转换任务", sender);
@@ -419,7 +417,7 @@ export default class ImageMod {
 						}
 					}),
 
-				Command.create("i:n", "取消/中断转换")
+this.Command.create("i:n", "取消/中断转换")
 					.setFunc((sender) => {
 						if (this.job) {
 							this.job.cancelled = true;
@@ -432,7 +430,7 @@ export default class ImageMod {
 						}
 					}),
 
-			Command.create("i:status", "查看转换进度")
+this.Command.create("i:status", "查看转换进度")
 				.setFunc((sender) => {
 					if (!this.job) {
 						this.client.tell("§cImage | §fError > §i没有进行中的转换任务", sender);
@@ -484,7 +482,7 @@ export default class ImageMod {
 			return;
 		}
 
-		const filePath = path.join(config.basePath.image, fileName);
+		const filePath = path.join(this.config.basePath, fileName);
 		if (!fs.existsSync(filePath)) {
 			this.client.tell(`§cImage | §fError > §i文件不存在: ${fileName}`, sender);
 			return;

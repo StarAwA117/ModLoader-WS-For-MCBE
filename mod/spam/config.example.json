@@ -1,0 +1,5 @@
+{
+  "attack": "replaceZeros test",
+  "ad": ["Ad message 1", "Ad message 2"],
+  "adInterval": 60000
+}

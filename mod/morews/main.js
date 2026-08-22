@@ -1,5 +1,4 @@
 import WebSocket from "ws";
-import Command from "../lib/command.js";
 
 // 扩展 WebSocket 连接类
 // 允许客户端同时连接到多个外部 WebSocket 服务端，实现消息的双向转发
@@ -16,7 +15,7 @@ export default class MoreWS {
 	onCommand() {
 		return {
 			op: [
-				Command.create("c:connect", "连接到 WebSocket 服务端")
+this.Command.create("c:connect", "连接到 WebSocket 服务端")
 				.addString("WebSocket 地址", true)
 				.setFunc((_, ip) => {
 					this.connect(ip);

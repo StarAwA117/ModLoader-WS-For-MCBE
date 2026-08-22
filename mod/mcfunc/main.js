@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import Command from "../lib/command.js";
 
 // Minecraft 函数文件执行类
 // 支持加载和执行 .mcfunction 格式的指令文件，支持嵌套调用和循环执行
@@ -15,13 +14,13 @@ export default class MCFunc {
 	onCommand() {
 		return {
 			op: [
-				Command.create("f:function", "运行 Function 文件")
+this.Command.create("f:function", "运行 Function 文件")
 				.addString("文件路径", true)
 				.setFunc((_, filePath) => {
 					this.run(filePath);
 				}),
 
-				Command.create("f:loop", "循环运行 Function")
+this.Command.create("f:loop", "循环运行 Function")
 				.addString("文件路径", true)
 				.addString("循环名称", true)
 				.addFloat("间隔秒数", true)
@@ -29,7 +28,7 @@ export default class MCFunc {
 					this.loop(filePath, name, interval);
 				}),
 
-				Command.create("f:stop", "停止循环（不带参数停止所有）")
+this.Command.create("f:stop", "停止循环（不带参数停止所有）")
 				.addOptionalString("循环名称")
 				.setFunc((_, name) => {
 					this.stop(name);
@@ -42,7 +41,7 @@ export default class MCFunc {
 	// 返回按行分割的指令数组，失败返回 false
 	async load(fileName) {
 		try {
-			const file = await fs.promises.readFile(path.join(this.config.basePath.mcfunc, fileName), "utf-8");
+			const file = await fs.promises.readFile(path.join(this.config.basePath, fileName), "utf-8");
 			const commands = file.split("\n");
 			return commands;
 		} catch {

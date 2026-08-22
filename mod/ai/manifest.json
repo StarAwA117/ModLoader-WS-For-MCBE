@@ -1,0 +1,11 @@
+{
+  "name": "ai",
+  "description": "",
+  "version": "1.0.0",
+  "author": "",
+  "enabled": true,
+  "entry": {
+    "server": "main.js",
+    "client": "main.js"
+  }
+}

@@ -1,8 +1,10 @@
 # Config
 config.json
 permission.json
-resources/*
+mod/**/config.json
 
+# Resources
+resources/*
 
 # Logs
 logs/
@@ -22,6 +24,3 @@ node_modules/
 
 # Python
 __pycache__/
-
-# 首次运行标记（setup.js 写入）
-.configured

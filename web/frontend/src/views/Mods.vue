@@ -46,7 +46,7 @@ onMounted(refresh);
 				<div v-else>
 					<div v-for="m in mods.server" :key="m.name" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-input); border-radius: 8px; margin-bottom: 6px;">
 						<span style="font-weight: 500;">{{ m.name }}</span>
-						<span class="badge" style="margin-left: auto;">已加载</span>
+						<span class="badge" style="margin-left: auto;">{{ m.enabled ? '已启用' : '已禁用' }}</span>
 					</div>
 				</div>
 			</div>
@@ -58,7 +58,7 @@ onMounted(refresh);
 				<div v-else>
 					<div v-for="m in mods.client" :key="m.name" style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-input); border-radius: 8px; margin-bottom: 6px;">
 						<span style="font-weight: 500;">{{ m.name }}</span>
-						<span class="badge" style="margin-left: auto;">已加载</span>
+						<span class="badge" style="margin-left: auto;">{{ m.enabled ? '已启用' : '已禁用' }}</span>
 					</div>
 				</div>
 			</div>

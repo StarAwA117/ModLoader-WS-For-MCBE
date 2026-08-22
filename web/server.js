@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { fileURLToPath } from "url";
-import { config, reloadConfig, eventBus, ServerModManager, ClientModManager } from "../lib/mods.js";
+import { config, reloadConfig, eventBus, ServerModManager, ClientModManager, modRegistry } from "../lib/mods.js";
 import Current from "../lib/current.js";
 import PermissionManager from "../lib/permission.js";
 import Command from "../lib/command.js";
@@ -217,8 +217,9 @@ async function handleAPI(req, res, url) {
 
 		// Mods
 		if (pathname === "/api/mods" && method === "GET") {
-			const serverMods = Object.keys(ServerModManager.loadedMod || {}).map(name => ({ name, type: "server" }));
-			const clientMods = Object.keys(ClientModManager.loadedMod || {}).map(name => ({ name, type: "client" }));
+			const allMods = modRegistry.list();
+			const serverMods = allMods.filter(m => m.entry.server).map(m => ({ name: m.name, enabled: m.enabled }));
+			const clientMods = allMods.filter(m => m.entry.client).map(m => ({ name: m.name, enabled: m.enabled }));
 			return json(res, { server: serverMods, client: clientMods });
 		}
 		if (pathname === "/api/mods/reload-all" && method === "POST") {

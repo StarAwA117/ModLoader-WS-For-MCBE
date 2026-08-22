@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import Command from "../lib/command.js";
 import { parseMidi } from "midi-file";
 
 // MIDI 解析工具函数
@@ -144,37 +143,37 @@ export default class MusicDisplay {
 	onCommand() {
 		return {
 			normal: [
-				Command.create("m:join", "加入音乐收听")
+this.Command.create("m:join", "加入音乐收听")
 				.setFunc((commander) => {
 					this.client.sendCommand(`tag @a[name="${commander}"] remove non-listener`);
 					this.client.tell("§eMusic | §fJoin > §i已加入收听音乐~", commander);
 				}),
 
-				Command.create("m:exit", "退出音乐收听")
+this.Command.create("m:exit", "退出音乐收听")
 				.setFunc((commander) => {
 					this.client.sendCommand(`tag @a[name="${commander}"] add non-listener`);
 					this.client.tell("§eMusic | §fExit > §i已退出收听音乐~", commander);
 				}),
 
-				Command.create("m:status", "查看当前播放进度")
+this.Command.create("m:status", "查看当前播放进度")
 				.setFunc((commander) => {
 					this.status(commander);
 				}),
 
-			Command.create("m:list", "查看音乐列表")
+this.Command.create("m:list", "查看音乐列表")
 				.addOptionalInteger("页码")
 				.setFunc(async (commander, page) => {
 					await this.show(10, page, commander);
 				}),
 
-			Command.create("m:search", "搜索音乐文件")
+this.Command.create("m:search", "搜索音乐文件")
 				.addString("关键词", false)
 				.addOptionalInteger("页码")
 				.setFunc(async (commander, keyword, page) => {
 					await this.search(keyword, 10, page, commander);
 				}),
 
-				Command.create("m:percussion", "开启/关闭打击乐器")
+this.Command.create("m:percussion", "开启/关闭打击乐器")
 				.addEnum(["on", "off"], "开关状态 (on=开启 off=关闭)")
 				.setFunc((commander, mode) => {
 					this.playPercussion = mode === "on";
@@ -183,23 +182,23 @@ export default class MusicDisplay {
 			],
 
 			user: [
-				Command.create("m:run", "快速播放指定音乐")
+this.Command.create("m:run", "快速播放指定音乐")
 				.addString("音乐文件名", true)
 				.setFunc((_, fileName) => {
 					this.fastrun(fileName);
 				}),
 
-				Command.create("m:next", "切换到下一首音乐")
+this.Command.create("m:next", "切换到下一首音乐")
 				.setFunc((_) => {
 					this.next();
 				}),
 
-				Command.create("m:random", "随机播放音乐")
+this.Command.create("m:random", "随机播放音乐")
 				.setFunc((_) => {
 					this.random();
 				}),
 
-				Command.create("m:loop", "设置循环播放模式")
+this.Command.create("m:loop", "设置循环播放模式")
 				.addEnum(["next", "random", "single"], "播放模式 (next=顺序 random=随机 single=单曲)")
 				.addOptionalString("歌名 (仅 single 模式有效)")
 				.setFunc((commander, mode, fileName) => {
@@ -216,7 +215,7 @@ export default class MusicDisplay {
 					}
 				}),
 
-				Command.create("m:stop", "停止播放（不带参数停止全部）")
+this.Command.create("m:stop", "停止播放（不带参数停止全部）")
 				.addOptionalEnum(["music", "loop", "all"], "停止范围 (music=仅音乐 loop=仅循环 all=全部，默认 all)")
 				.setFunc((_, mode) => {
 					if (mode === undefined || mode === "all") this.stopAll();
@@ -241,7 +240,7 @@ export default class MusicDisplay {
 
 	get() {
 		return new Promise((resolve, reject) => {
-			fs.readdir(this.config.basePath.music, (error, files) => {
+			fs.readdir(this.config.basePath, (error, files) => {
 				if (error) {
 					this.client.tell(`§cMusic | §fError > §i获取目录失败: ${error}`);
 					reject(new Error("目录获取失败"));
@@ -308,10 +307,10 @@ export default class MusicDisplay {
 
 			let filePath;
 			if (fileName.endsWith(".json") || fileName.endsWith(".mid")) {
-				filePath = path.join(this.config.basePath.music, fileName);
+				filePath = path.join(this.config.basePath, fileName);
 			} else {
-				const jsonPath = path.join(this.config.basePath.music, fileName + ".json");
-				const midPath = path.join(this.config.basePath.music, fileName + ".mid");
+				const jsonPath = path.join(this.config.basePath, fileName + ".json");
+				const midPath = path.join(this.config.basePath, fileName + ".mid");
 				if (fs.existsSync(jsonPath)) {
 					filePath = jsonPath;
 				} else if (fs.existsSync(midPath)) {
@@ -552,7 +551,7 @@ export default class MusicDisplay {
 		const items = pageFiles.map((f, i) => {
 			const name = f.replace(/\.(json|mid)$/i, "");
 			const num = String(startIndex + i + 1).padStart(2, " ");
-			const filePath = path.join(this.config.basePath.music, f);
+			const filePath = path.join(this.config.basePath, f);
 			let size = "?";
 			try {
 				const stats = fs.statSync(filePath);
@@ -592,7 +591,7 @@ export default class MusicDisplay {
 		const items = pageFiles.map((f, i) => {
 			const name = f.replace(/\.(json|mid)$/i, "");
 			const num = String(startIndex + i + 1).padStart(2, " ");
-			const filePath = path.join(this.config.basePath.music, f);
+			const filePath = path.join(this.config.basePath, f);
 			let size = "?";
 			try {
 				const stats = fs.statSync(filePath);

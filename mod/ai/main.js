@@ -1,7 +1,4 @@
 import OpenAI from "openai";
-import Command from "../lib/command.js";
-import Utils from "../lib/utils.js";
-import Current from "../lib/current.js";
 
 // OpenAI 客户端（无密钥时不构造，chat 时给出明确报错）
 let openai = null;
@@ -25,7 +22,7 @@ export default class AIHelper {
 		if (AIHelper.cleanupInterval) return;
 
 		AIHelper.cleanupInterval = setInterval(() => {
-			const client = Current.client;
+			const client = AIHelper.Current.client;
 			if (!client) return;
 
 			// 获取当前在线玩家列表
@@ -74,15 +71,15 @@ export default class AIHelper {
 
 	// 聊天方法（sendMsg: 用户输入, mode: 模式, contents: 上下文）
 	static async chat(sendMsg, mode, contents = null) {
-		if (!AIHelper.config || !AIHelper.config.ai) throw new Error("AI 配置未加载");
+		if (!AIHelper.config || !AIHelper.config.options || !AIHelper.config.models) throw new Error("AI 配置未加载");
 
 		// 惰性初始化 OpenAI 客户端（避免模块加载时即依赖配置）
-		if (!openai && AIHelper.config.ai.options?.apiKey) {
-			openai = new OpenAI(AIHelper.config.ai.options);
+		if (!openai && AIHelper.config.options?.apiKey) {
+			openai = new OpenAI(AIHelper.config.options);
 		}
 
-		if (!AIHelper.config.ai.models[mode]) throw new Error("该模式不存在");
-		const sendData = JSON.parse(JSON.stringify(AIHelper.config.ai.models[mode]));
+		if (!AIHelper.config.models[mode]) throw new Error("该模式不存在");
+		const sendData = JSON.parse(JSON.stringify(AIHelper.config.models[mode]));
 
 		// 上文模式下将历史对话追加到请求中（过滤缺失 content 的异常历史，避免报 missing field）
 		if (contents) {
@@ -134,13 +131,13 @@ export default class AIHelper {
 	onCommand() {
 		return {
 			normal: [
-				Command.create("ai", "与 AI 进行对话")
+this.Command.create("ai", "与 AI 进行对话")
 				.addString("对话内容", true)
 				.setFunc(async (commander, text) => {
 					await this.chat(text, commander);
 				}),
 
-				Command.create("ai:reset", "重置对话上下文")
+this.Command.create("ai:reset", "重置对话上下文")
 				.setFunc(commander => {
 					this.reset(commander);
 					this.client.tellAll(`§eAI | §fSystem > §i对话上下文已重置`);
@@ -148,7 +145,7 @@ export default class AIHelper {
 			],
 
 			op: [
-				Command.create("ai:c", "让 AI 执行基岩版命令")
+this.Command.create("ai:c", "让 AI 执行基岩版命令")
 				.addString("对话内容", true)
 				.setFunc(async (commander, text) => {
 					await this.command(text, commander);
@@ -164,7 +161,7 @@ export default class AIHelper {
 		const lastTime = data.lastAIChat || 0;
 
 		// 发言过快检测（先判定，通过后再更新时间，避免冷却被每次失败发言后移）
-		if (now - lastTime < AIHelper.config.ai.chatCooldown) {
+		if (now - lastTime < AIHelper.config.chatCooldown) {
 			this.client.tellAll(`§cAI | §fCooldown > §i聊天速度过快`);
 			return false;
 		}
@@ -182,7 +179,7 @@ export default class AIHelper {
 
 		try {
 			const result = await AIHelper.chat(sendMsg, "chat", contents);
-			Utils.splitByBytes(result, 300).forEach(msg => this.client.tellAll(`§bAI | §f${name} > §i${msg}`));
+			this.client.tellAll(`§bAI | §f${name} > §i${result}`);
 		} catch (e) {
 			this.client.tellAll(`§cAI | §fError > §i${e.message}`);
 		}
@@ -199,7 +196,7 @@ export default class AIHelper {
 			let result = await AIHelper.chat(sendMsg, "command", contents);
 			result = result.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
 			const resultObject = JSON.parse(result);
-			Utils.splitByBytes(resultObject.message, 300).forEach(msg => this.client.tellAll(`§bAI | §f${name} > §i${msg}`));
+			this.client.tellAll(`§bAI | §f${name} > §i${resultObject.message}`);
 			resultObject.commands.forEach(command => {
 				this.client.sendCommand(command);
 				this.client.tellAll(`§bAI | §fCommand > §i${command.startsWith("/") ? command : "/" + command}`);
