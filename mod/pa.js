@@ -14,12 +14,15 @@ const __dirname = path.dirname(__filename);
 const { commandPrefix } = config;
 
 // ===== pi 配置 =====
+// 可调参数集中在 config.json 的 "pa" 段(同名环境变量优先级更高)
+const PA_CONFIG = (config && typeof config.pa === "object") ? config.pa : {};
+
 // pi 可执行文件(可通过环境变量 PA_PI_BIN 覆盖)
 const PI_BIN = process.env.PA_PI_BIN || "pi";
-// 模型: pi-bansos 提供的免费模型(无需 API Key)
+// 模型: 在 config.json 的 pa.model 中定义, 可用环境变量 PA_MODEL 覆盖
 // 注意: deepseek-v4-flash-free 免费额度容易耗尽(429 FreeUsageLimitError),
-// 此时换 nemotron-3-ultra-free 等其他模型即可。可用 PA_MODEL 覆盖。
-const AI_MODEL = process.env.PA_MODEL || "bansos/nemotron-3-ultra-free";
+// 此时换 nemotron-3-ultra-free 等其他模型即可。
+const AI_MODEL = process.env.PA_MODEL || PA_CONFIG.model || "bansos/nemotron-3-ultra-free";
 // 模型 ID(不带 provider 前缀)
 const AI_MODEL_ID = AI_MODEL.includes("/") ? AI_MODEL.split("/").pop() : AI_MODEL;
 // 扫描本机 bansos 代理端口范围(终端 pi 的代理不固定占 18080,
@@ -32,10 +35,15 @@ const LOCAL_PROVIDER = "bansos-local";
 const MODELS_FILE = path.join(os.homedir(), ".pi", "agent", "models.json");
 // 会话保存目录: 所有游戏内对话保存在这里, 便于定位/继续会话
 const SESSION_DIR = path.join(__dirname, "pa-sessions");
-// deepseek-v4-flash-free 上下文窗口为 1M tokens
-const CONTEXT_WINDOW = 1000000;
-// 累计 token 超过该阈值 => 自动开启新会话(默认取上下文窗口的 70%)
-const TOKEN_LIMIT = Number(process.env.PA_TOKEN_LIMIT) || Math.floor(CONTEXT_WINDOW * 0.7);
+// 上下文窗口(tokens): 在 config.json 的 pa.contextWindow 中定义(默认 1000000)
+const CONTEXT_WINDOW = Number(PA_CONFIG.contextWindow) > 0
+	? Math.floor(Number(PA_CONFIG.contextWindow))
+	: 1000000;
+// 累计 token 超过该阈值 => 自动开启新会话
+// 优先级: 环境变量 PA_TOKEN_LIMIT > config.json pa.tokenLimit > 上下文窗口 * pa.tokenLimitRatio(默认 0.7)
+const TOKEN_LIMIT = Number(process.env.PA_TOKEN_LIMIT)
+	|| (Number(PA_CONFIG.tokenLimit) > 0 ? Math.floor(Number(PA_CONFIG.tokenLimit)) : 0)
+	|| Math.floor(CONTEXT_WINDOW * (Number(PA_CONFIG.tokenLimitRatio) > 0 ? Number(PA_CONFIG.tokenLimitRatio) : 0.7));
 // 单次对话超时(ms)
 const PROMPT_TIMEOUT = Number(process.env.PA_TIMEOUT) || 300000;
 // RPC 进程启动(含模型健康检查)超时(ms)
@@ -625,7 +633,7 @@ class PA {
 						if (PERSONA_EXT) extNames.push("persona");
 						this.client.tellAll(`§apa§r | info > §7扩展: ${extNames.length ? extNames.join(" + ") : "无"} | 常驻进程: ${this._rpc ? "运行中" : "未启动"}`);
 						this.client.tellAll(`§apa§r | info > §7会话文件: ${file ? path.basename(file) : "无"}`);
-						this.client.tellAll(`§apa§r | info > §7Token用量: ${tokens} | 最高: ${maxTokens} | 上限: ${TOKEN_LIMIT}`);
+						this.client.tellAll(`§apa§r | info > §7上下文窗口: ${CONTEXT_WINDOW} | Token用量: ${tokens} | 最高: ${maxTokens} | 上限: ${TOKEN_LIMIT}`);
 						this.client.tellAll(`§apa§r | info > §7空闲消息: ${idleEnabled ? "开启" : "关闭"}`);
 						return { status: true };
 					}

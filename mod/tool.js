@@ -2,7 +2,7 @@ import { exec } from "child_process";
 import Command from "../lib/command.js";
 import Current from "../lib/current.js";
 import PermissionManager from "../lib/permission.js";
-import QQ from "./qq/main.js";
+// import QQ from "./qq/main.js";
 import { ServerModManager, ClientModManager, reloadConfig } from "../lib/mods.js";
 
 export default class Tool {
@@ -262,6 +262,7 @@ export default class Tool {
 						const output = stdout || stderr || "";
 						const lines = output.split("\n").filter(l => l.length > 0);
 
+						this.client.tellAll(`§eTool | §fexec > §i共 ${lines.length} 行`);
 						if (lines.length === 0) {
 							this.client.tellAll("§i(无输出)");
 							return;

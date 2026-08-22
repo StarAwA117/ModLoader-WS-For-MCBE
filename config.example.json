@@ -21,6 +21,11 @@
 			"accessToken": ""
 		}
 	},
+	"pa": {
+        "model": "bansos/nemotron-3-ultra-free",
+        "contextWindow": 1000000,
+        "tokenLimitRatio": 0.7
+    },
 	"mods": {
 		"client": {
 			"AI": "../mod/ai.js",
