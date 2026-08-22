@@ -2,7 +2,7 @@ import { exec } from "child_process";
 import Command from "../lib/command.js";
 import Current from "../lib/current.js";
 import PermissionManager from "../lib/permission.js";
-// import QQ from "./qq/main.js";
+import QQ from "./qq/main.js";
 import { ServerModManager, ClientModManager, reloadConfig } from "../lib/mods.js";
 
 export default class Tool {
