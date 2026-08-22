@@ -1,22 +1,23 @@
-import Command from "../../lib/command.js";
-import Current from "../../lib/current.js";
-import { config } from "../../lib/mods.js";
 import { Detector } from "./detector.js";
 import QQ from "./main.js";
 
 export default class QQClient {
 	constructor(client) {
 		this.client = client;
-		this._isMain = client === Current.client;
+		this._isMain = false;
+	}
+
+	onStart() {
+		this._isMain = this.client === this.Current.client;
 		if (this._isMain) {
-			QQ.setMainClient(client);
+			QQ.setMainClient(this.client);
 		}
 	}
 
 	onCommand() {
 		return {
 			user: [
-				Command.create("q:send", "向 QQ 群发送消息")
+this.Command.create("q:send", "向 QQ 群发送消息")
 				.addString("消息内容", true)
 				.setFunc(async (sender, text) => {
 					if (!this._isMain) {
@@ -40,7 +41,7 @@ export default class QQClient {
 			],
 
 			owner: [
-				Command.create("q:check", "检测并手动重连 QQ")
+this.Command.create("q:check", "检测并手动重连 QQ")
 				.setFunc(async (sender) => {
 					if (!this._isMain) {
 						this.client.tell("§cQQ | §fError > §i仅主客户端可使用此命令", sender);
@@ -55,14 +56,14 @@ export default class QQClient {
 					}
 				}),
 
-				Command.create("q:toggle", "开启/关闭 QQ 互通功能")
+this.Command.create("q:toggle", "开启/关闭 QQ 互通功能")
 				.addBoolean("启用或禁用", true)
 				.setFunc((sender, enabled) => {
 					if (!this._isMain) {
 						this.client.tell("§cQQ | §fError > §i仅主客户端可使用此命令", sender);
 						return;
 					}
-					config.features.qq.enabled = enabled;
+					this.config.features.qq.enabled = enabled;
 					this.client.tellAll(`§eQQ | §fToggle > §i互通已${enabled ? "启用" : "禁用"}`);
 				})
 			]

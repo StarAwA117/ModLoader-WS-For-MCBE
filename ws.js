@@ -1,11 +1,23 @@
 import { WebSocketServer } from "ws";
 import { v4 as uuidv4 } from "uuid";
-import * as shared from "./lib/shared.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { logger } from "./lib/logger.js";
 import { closeLogStreams } from "./lib/logger.js";
-import { config, ClientModManager, ServerModManager } from "./lib/mods.js";
+import { config, ClientModManager, ServerModManager, modRegistry } from "./lib/mods.js";
 import Utils from "./lib/utils.js";
 import Current from "./lib/current.js";
 import { startWebServer } from "./web/server.js";
+
+// 如果 config.json 不存在则从 config.example.json 复制
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const configPath = path.resolve(__dirname, "config.json");
+const configExamplePath = path.resolve(__dirname, "config.example.json");
+if (!fs.existsSync(configPath) && fs.existsSync(configExamplePath)) {
+	fs.copyFileSync(configExamplePath, configPath);
+	logger.info("已从 config.example.json 初始化 config.json");
+}
 
 // 创建 WebSocket 服务端，监听端口 config.ws.port
 const server = new WebSocketServer({
@@ -14,25 +26,26 @@ const server = new WebSocketServer({
 
 // 立即注册错误监听，避免端口占用等错误在异步加载期间未被捕获
 server.on("error", (error) => {
-	shared.logger.error(`服务器错误: ${error.message}`);
-	shared.logger.debug(error.stack);
+	logger.error(`服务器错误: ${error.message}`);
+	logger.debug(error.stack);
 });
 
-// 加载服务端 Mod 和客户端 Mod 的静态定义
+// 扫描并加载服务端 Mod 和客户端 Mod 的静态定义
+modRegistry.scan();
 await ServerModManager.load();
 await ClientModManager.load();
-shared.logger.info("服务器已启动");
+logger.info("服务器已启动");
 
 // 启动 WebUI 服务器
 startWebServer().catch(e => {
-	shared.logger.error(`WebUI 启动失败: ${e.message}`);
+	logger.error(`WebUI 启动失败: ${e.message}`);
 });
 
 // 处理客户端连接
 server.on("connection", (ws) => {
 	// 获取客户端 IP
 	const clientIP = ws._socket.remoteAddress;
-	shared.logger.info(`客户端 ${clientIP} 已连接`);
+	logger.info(`客户端 ${clientIP} 已连接`);
 
 	// 分配唯一 ID，用于客户端 Mod 存储和事件总线隔离
 	ws.id = uuidv4();
@@ -44,7 +57,7 @@ server.on("connection", (ws) => {
 	const isMainClient = !Current.client;
 	if (isMainClient) {
 		Current.client = ws;
-		shared.logger.info("主客户端已连接");
+		logger.info("主客户端已连接");
 	}
 
 	// 实例化客户端 Mod，注入当前连接
@@ -92,7 +105,7 @@ server.on("connection", (ws) => {
 
 	// 处理客户端断开连接
 	ws.on("close", () => {
-		shared.logger.info(`客户端 ${clientIP} 连接已关闭`);
+		logger.info(`客户端 ${clientIP} 连接已关闭`);
 
 		// 通知服务端 Mod 客户端已断开连接
 		ServerModManager.onClientDisconnect(ws, ws === Current.client);
@@ -100,7 +113,7 @@ server.on("connection", (ws) => {
 		// 若为主客户端断开，重置主客户端状态
 		if (ws === Current.client) {
 			Current.reset();
-			shared.logger.info("主客户端连接已关闭");
+			logger.info("主客户端连接已关闭");
 		}
 
 		// 销毁该客户端的所有 Mod 实例
@@ -119,8 +132,8 @@ server.on("connection", (ws) => {
 	// 处理客户端错误
 	ws.on("error", (error) => {
 		if (ws === Current.client) {
-			shared.logger.error(`主客户端错误: ${error.message}`);
-			shared.logger.debug(error.stack);
+			logger.error(`主客户端错误: ${error.message}`);
+			logger.debug(error.stack);
 		}
 	});
 });
@@ -133,30 +146,30 @@ async function destroy() {
 	if (destroying) return;
 	destroying = true;
 
-	shared.logger.info("正在关闭服务端 Mod...");
+	logger.info("正在关闭服务端 Mod...");
 	ServerModManager.destroy();
-	shared.logger.info("服务端 Mod 已关闭");
+	logger.info("服务端 Mod 已关闭");
 
-	shared.logger.info("正在通知客户端断开连接...");
+	logger.info("正在通知客户端断开连接...");
 	server.clients.forEach((client) => {
 		client.tell(`§c${config.ws.name} | §fSystem > §i已关闭连接`);
 		client.runCommand("/closewebsocket").catch(() => {});
 		client.close();
 	});
-	shared.logger.info("客户端通知已完成");
+	logger.info("客户端通知已完成");
 
-	shared.logger.info("正在关闭服务器...");
+	logger.info("正在关闭服务器...");
 
 	const hardTimeout = new Promise((_, reject) => {
 		setTimeout(() => {
-			shared.logger.warning("服务器关闭超时，强制退出");
+			logger.warning("服务器关闭超时，强制退出");
 			reject(new Error("服务器关闭超时"));
 		}, 10000);
 	});
 
 	const close = new Promise((resolve) => {
 		server.close(() => {
-			shared.logger.info("服务器已关闭");
+			logger.info("服务器已关闭");
 			resolve();
 		});
 	});
@@ -164,15 +177,15 @@ async function destroy() {
 	try {
 		await Promise.race([close, hardTimeout]);
 	} catch {
-		shared.logger.warning("服务器关闭异常，正在强制退出");
+		logger.warning("服务器关闭异常，正在强制退出");
 	}
 }
 
 // 信号处理
 process.on("SIGINT", async () => {
-	shared.logger.info("正在执行正常关闭...");
+	logger.info("正在执行正常关闭...");
 	await destroy();
 	closeLogStreams();
-	shared.logger.info("程序进程结束");
+	logger.info("程序进程结束");
 	process.exit(0);
 });

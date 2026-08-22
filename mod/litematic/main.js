@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import zlib from "zlib";
 import { fileURLToPath } from "url";
-import Command from "../../lib/command.js";
 
 // 路径解析辅助（原配置曾提供的 resolvePath，按 cwd 解析相对路径）
 const resolvePath = (p) => path.resolve(p);
@@ -503,7 +502,7 @@ export default class Litematic {
 		return {
 			op: [
 				// l:help [命令名] — 列出所有命令，或查看指定命令的用法
-				Command.create("l:help", "查看命令用法")
+this.Command.create("l:help", "查看命令用法")
 					.addOptionalString("命令名")
 					.setFunc((sender, name) => {
 						const all = this.onCommand().op;
@@ -534,7 +533,7 @@ export default class Litematic {
 					}),
 
 				// l:create <文件> [X] [Y] [Z] [trim|raw] — 导入建筑投影
-				Command.create("l:create", "导入 Litematic 建筑投影")
+this.Command.create("l:create", "导入 Litematic 建筑投影")
 					.addString("文件名", false)
 					.addOptionalString("X")
 					.addOptionalString("Y")
@@ -549,7 +548,7 @@ export default class Litematic {
 					}),
 
 				// l:preview <文件> [X] [Y] [Z] [trim|raw] — 粒子+实体边框预览
-				Command.create("l:preview", "粒子边框 + 实体标记预览建筑位置")
+this.Command.create("l:preview", "粒子边框 + 实体标记预览建筑位置")
 					.addString("文件名", false)
 					.addOptionalString("X")
 					.addOptionalString("Y")
@@ -560,13 +559,13 @@ export default class Litematic {
 					}),
 
 				// l:unpreview — 清除预览
-				Command.create("l:unpreview", "清除建筑预览")
+this.Command.create("l:unpreview", "清除建筑预览")
 					.setFunc((sender) => {
 						this.clearPreview(sender);
 					}),
 
 				// l:export <文件> [导出名] [trim|raw] — 导出 .mcstructure 结构文件
-				Command.create("l:export", "导出为 MCBE 结构方块文件 (.mcstructure)")
+this.Command.create("l:export", "导出为 MCBE 结构方块文件 (.mcstructure)")
 					.addString("文件名", false)
 					.addOptionalString("导出名")
 					.addOptionalString("模式")
@@ -575,20 +574,20 @@ export default class Litematic {
 					}),
 
 				// l:list [页码] — 浏览建筑文件
-				Command.create("l:list", "查看建筑文件列表")
+this.Command.create("l:list", "查看建筑文件列表")
 					.addOptionalString("页码")
 					.setFunc((sender, page) => {
 						this.listFiles(page, sender);
 					}),
 
 				// l:id — 查看所有任务 ID（$create 返回，供 $verify / $fix 使用）
-				Command.create("l:id", "查看所有任务 ID")
+this.Command.create("l:id", "查看所有任务 ID")
 					.setFunc((sender) => {
 						this.listTasks(sender);
 					}),
 
 				// l:search <关键词> [页码] — 搜索建筑文件
-				Command.create("l:search", "搜索建筑文件")
+this.Command.create("l:search", "搜索建筑文件")
 					.addString("关键词", false)
 					.addOptionalString("页码")
 					.setFunc((sender, keyword, page) => {
@@ -596,7 +595,7 @@ export default class Litematic {
 					}),
 
 				// l:y — 确认待执行的导入
-				Command.create("l:y", "确认导入操作")
+this.Command.create("l:y", "确认导入操作")
 					.setFunc(async (sender) => {
 						if (!this.pending) {
 							this.client.tell("§cLitematic | §fError > §i没有待确认的导入任务", sender);
@@ -612,7 +611,7 @@ export default class Litematic {
 					}),
 
 				// l:n — 取消待确认任务或中断正在进行的导入/检查/修复
-				Command.create("l:n", "取消/中断操作")
+this.Command.create("l:n", "取消/中断操作")
 					.setFunc((sender) => {
 						if (this.job) {
 							this.job.cancelled = true;
@@ -632,13 +631,13 @@ export default class Litematic {
 					}),
 
 				// l:author — 作者信息
-				Command.create("l:author", "查看作者信息")
+this.Command.create("l:author", "查看作者信息")
 					.setFunc((sender) => {
 						this.client.tell("§eLitematic | §fAuthor > §iStarAwA117 & Hydrooxygen", sender);
 					}),
 
 				// l:status — 查看所有进行中任务进度（导入 / 世界检查 / 修复）
-				Command.create("l:status", "查看导入/检查/修复进度")
+this.Command.create("l:status", "查看导入/检查/修复进度")
 					.setFunc((sender) => {
 						const lines = [];
 						if (this.job) {
@@ -679,7 +678,7 @@ export default class Litematic {
 					}),
 
 				// l:verify <ID> [map|world] — 默认检查游戏世界一致性；map 检查方块映射错误
-				Command.create("l:verify", "检查投影与世界的差异 / 方块映射错误")
+this.Command.create("l:verify", "检查投影与世界的差异 / 方块映射错误")
 					.addString("ID", false)
 					.addOptionalString("模式")
 					.setFunc(async (sender, id, mode) => {
@@ -697,7 +696,7 @@ export default class Litematic {
 					}),
 
 				// l:fix <ID> [替代方块] — 修复错误方块
-				Command.create("l:fix", "修复被挖掉的方块 / 替换无法映射的方块")
+this.Command.create("l:fix", "修复被挖掉的方块 / 替换无法映射的方块")
 					.addString("ID", false)
 					.addOptionalString("替代方块")
 					.setFunc((sender, id, fb) => {
@@ -718,7 +717,7 @@ export default class Litematic {
 
 	// 分页显示文件列表（每页 5 个，附带文件大小）
 	pageList(sender, files, header) {
-		const dir = this.config.basePath.litematic;
+		const dir = this.config.basePath;
 		if (!fs.existsSync(dir)) {
 			this.client.tell("§cLitematic | §fError > §i建筑目录不存在", sender);
 			return;
@@ -751,7 +750,7 @@ export default class Litematic {
 
 	listFiles(page, sender) {
 		this.page = page !== undefined ? parseInt(page) || 1 : 1;
-		const dir = this.config.basePath.litematic;
+		const dir = this.config.basePath;
 		const files = fs.existsSync(dir)
 			? fs.readdirSync(dir).filter(f => f.endsWith(".litematic")).sort()
 			: [];
@@ -760,7 +759,7 @@ export default class Litematic {
 
 	searchFiles(keyword, page, sender) {
 		this.page = page !== undefined ? parseInt(page) || 1 : 1;
-		const dir = this.config.basePath.litematic;
+		const dir = this.config.basePath;
 		const files = fs.existsSync(dir)
 			? fs.readdirSync(dir).filter(f => f.endsWith(".litematic") && f.toLowerCase().includes(keyword.toLowerCase())).sort()
 			: [];
@@ -825,7 +824,7 @@ export default class Litematic {
 			return;
 		}
 
-		const filePath = path.join(this.config.basePath.litematic, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
+		const filePath = path.join(this.config.basePath, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
 		if (!fs.existsSync(filePath)) {
 			this.client.tell(`§cLitematic | §fError > §i文件不存在: ${fileName}`, sender);
 			return;
@@ -1292,7 +1291,7 @@ export default class Litematic {
 			this.client.tell("§cLitematic | §fError > §i坐标参数不完整，需要同时提供 X Y Z 或都不提供（使用自身坐标）", sender);
 			return;
 		}
-		const filePath = path.join(this.config.basePath.litematic, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
+		const filePath = path.join(this.config.basePath, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
 		if (!fs.existsSync(filePath)) {
 			this.client.tell(`§cLitematic | §fError > §i文件不存在: ${fileName}`, sender);
 			return;
@@ -1407,7 +1406,7 @@ export default class Litematic {
 			return;
 		}
 		if (mode === undefined && exportName === "raw") { raw = true; exportName = undefined; }
-		const filePath = path.join(this.config.basePath.litematic, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
+		const filePath = path.join(this.config.basePath, fileName.endsWith(".litematic") ? fileName : fileName + ".litematic");
 		if (!fs.existsSync(filePath)) {
 			this.client.tell(`§cLitematic | §fError > §i文件不存在: ${fileName}`, sender);
 			return;

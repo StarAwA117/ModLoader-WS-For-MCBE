@@ -1,6 +1,6 @@
 English | [简体中文](./README.md)
 
-# StarWS
+# ModLoader
 
 Minecraft Bedrock Edition WebSocket bridge server. Connects clients via the built-in WebSocket API and injects commands and automation through a Mod system.
 
@@ -14,7 +14,6 @@ Minecraft Bedrock Edition WebSocket bridge server. Connects clients via the buil
 ## Quick Start
 
 ```bash
-node setup.js
 npm start
 ```
 

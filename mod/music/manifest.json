@@ -1,0 +1,11 @@
+{
+	"name": "Music Display",
+	"description": "为 MCBE 提供 Midi 音乐播放器",
+	"version": "1.0.0",
+	"author": "StarAwA117",
+	"enabled": false,
+	"entry": {
+		"server": null,
+		"client": "main.js"
+	}
+}

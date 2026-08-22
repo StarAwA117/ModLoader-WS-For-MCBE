@@ -1,6 +1,6 @@
 # API Reference
 
-StarWS exposes several programmatic APIs for Mod development and a REST API for the WebUI.
+ModLoader exposes several programmatic APIs for Mod development and a REST API for the WebUI.
 
 ---
 

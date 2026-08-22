@@ -1,7 +1,4 @@
 import { NCWebsocket, Structs } from "node-napcat-ts";
-import { config } from "../../lib/mods.js";
-import * as shared from "../../lib/shared.js";
-import Current from "../../lib/current.js";
 
 let napcat = null;
 let mainClient = null;
@@ -20,18 +17,18 @@ export default class QQ {
 
 	static connect() {
 		if (napcat) return;
-		if (!config.features.qq.enabled) return;
+		if (!this.config.enabled) return;
 
-		if (!config.features.qq.accessToken) {
-			shared.logger.warning("未配置 QQ accessToken，QQ 连接可能被服务端拒绝");
+		if (!this.config.accessToken) {
+			this.logger.warning("未配置 QQ accessToken，QQ 连接可能被服务端拒绝");
 		}
 
 		napcat = new NCWebsocket({
 			protocol: "ws",
-			host: config.features.qq.host,
-			port: config.features.qq.port,
+			host: this.config.host,
+			port: this.config.port,
 			// 令牌直接取自配置
-			accessToken: config.features.qq.accessToken,
+			accessToken: this.config.accessToken,
 			reconnection: {
 				enable: true,
 				// 底层库在 nowAttempts >= attempts 后彻底放弃重连，导致连接一旦断开就永久不可用
@@ -42,8 +39,8 @@ export default class QQ {
 		}, false);
 
 		napcat.on("message.group.normal", (data) => {
-			if (!config.features.qq.enabled) return;
-			if (data.group_id !== config.features.qq.groupId) return;
+			if (!this.config.enabled) return;
+			if (data.group_id !== this.config.groupId) return;
 			if (!mainClient) return;
 
 			const nickname = data.sender.card || data.sender.nickname || "QQ用户";
@@ -56,14 +53,14 @@ export default class QQ {
 		});
 
 		napcat.on("socket.close", () => {
-			shared.logger.warning("QQ 连接已断开");
+			this.logger.warning("QQ 连接已断开");
 		});
 
 		napcat.connect().then(() => {
-			shared.logger.info("QQ 已连接");
+			this.logger.info("QQ 已连接");
 		}).catch((e) => {
-			shared.logger.error("QQ 连接失败");
-			shared.logger.debug(e.message);
+			this.logger.error("QQ 连接失败");
+			this.logger.debug(e.message);
 		});
 	}
 
@@ -93,7 +90,7 @@ export default class QQ {
 
 	// 手动自愈检测：强制断开并重建连接，再用真实 API 请求验证链路是否畅通
 	static async check() {
-		if (!config.features.qq.enabled) return { ok: false, reason: "QQ 互通未启用" };
+		if (!this.config.enabled) return { ok: false, reason: "QQ 互通未启用" };
 		if (!napcat) this.connect();
 		if (!napcat) return { ok: false, reason: "napcat 未初始化" };
 
@@ -110,7 +107,7 @@ export default class QQ {
 	}
 
 	static async sendToGroup(text) {
-		if (!config.features.qq.enabled) return false;
+		if (!this.config.enabled) return false;
 		if (!napcat) return false;
 
 		// 若底层 socket 尚未建立/已断开，先尝试（重）连接，避免“总是发送失败”
@@ -120,13 +117,13 @@ export default class QQ {
 
 		try {
 			await napcat.send_group_msg({
-				group_id: config.features.qq.groupId,
+				group_id: this.config.groupId,
 				message: [Structs.text(text)]
 			});
 			return true;
 		} catch (e) {
-			shared.logger.error("QQ 消息发送失败");
-			shared.logger.debug(e.message);
+			this.logger.error("QQ 消息发送失败");
+			this.logger.debug(e.message);
 			return false;
 		}
 	}

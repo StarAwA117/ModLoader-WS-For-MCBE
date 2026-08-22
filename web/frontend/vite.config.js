@@ -5,7 +5,14 @@ export default defineConfig({
 	plugins: [vue()],
 	build: {
 		outDir: "dist",
-		emptyOutDir: true
+		emptyOutDir: true,
+		rollupOptions: {
+			output: {
+				manualChunks: {
+					vendor: ["vue", "vue-router"]
+				}
+			}
+		}
 	},
 	server: {
 		proxy: {
