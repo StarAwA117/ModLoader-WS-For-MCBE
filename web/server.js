@@ -208,9 +208,15 @@ async function handleAPI(req, res, url) {
 			return json(res, { ok: true });
 		}
 		const permMatch = pathname.match(/^\/api\/permissions\/(owner|op|user|blocker)\/(.+)$/);
+		if (permMatch && method === "POST") {
+			const [, group, player] = permMatch;
+			const r = PermissionManager.add(group, decodeURIComponent(player));
+			if (r instanceof Error) throw r;
+			return json(res, { ok: true });
+		}
 		if (permMatch && method === "DELETE") {
 			const [, group, player] = permMatch;
-			const r = await PermissionManager.remove(group, decodeURIComponent(player));
+			const r = PermissionManager.remove(group, decodeURIComponent(player));
 			if (r instanceof Error) throw r;
 			return json(res, { ok: true });
 		}
@@ -218,8 +224,14 @@ async function handleAPI(req, res, url) {
 		// Mods
 		if (pathname === "/api/mods" && method === "GET") {
 			const allMods = modRegistry.list();
-			const serverMods = allMods.filter(m => m.entry.server).map(m => ({ name: m.name, enabled: m.enabled }));
-			const clientMods = allMods.filter(m => m.entry.client).map(m => ({ name: m.name, enabled: m.enabled }));
+			const serverMods = allMods.filter(m => m.entry.server).map(m => ({
+				name: m.name, description: m.description, version: m.version, author: m.author,
+				enabled: m.enabled, hasConfig: m.hasConfig, hasReadme: m.hasReadme, entry: m.entry
+			}));
+			const clientMods = allMods.filter(m => m.entry.client).map(m => ({
+				name: m.name, description: m.description, version: m.version, author: m.author,
+				enabled: m.enabled, hasConfig: m.hasConfig, hasReadme: m.hasReadme, entry: m.entry
+			}));
 			return json(res, { server: serverMods, client: clientMods });
 		}
 		if (pathname === "/api/mods/reload-all" && method === "POST") {
@@ -231,6 +243,70 @@ async function handleAPI(req, res, url) {
 				server: { success: serverResult.success, failed: serverResult.failed },
 				client: { success: clientResult.success.length, failed: clientResult.failed }
 			});
+		}
+
+		// Mod enable/disable
+		const modEnableMatch = pathname.match(/^\/api\/mods\/(.+)\/enable$/);
+		if (modEnableMatch && method === "POST") {
+			const modId = modRegistry.list().find(m => m.name === modEnableMatch[1])?.id;
+			if (!modId) return json(res, { ok: false, message: "模组未找到" }, 404);
+			const r = modRegistry.enable(modId);
+			return json(res, r);
+		}
+		const modDisableMatch = pathname.match(/^\/api\/mods\/(.+)\/disable$/);
+		if (modDisableMatch && method === "POST") {
+			const modId = modRegistry.list().find(m => m.name === modDisableMatch[1])?.id;
+			if (!modId) return json(res, { ok: false, message: "模组未找到" }, 404);
+			const r = modRegistry.disable(modId);
+			return json(res, r);
+		}
+
+		// Mod config
+		const modConfigMatch = pathname.match(/^\/api\/mods\/(.+)\/config$/);
+		if (modConfigMatch && method === "GET") {
+			const modEntry = modRegistry.list().find(m => m.name === modConfigMatch[1]);
+			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
+			const configPath = path.join(modEntry.path, "config.json");
+			const examplePath = path.join(modEntry.path, "config.example.json");
+			if (!fs.existsSync(configPath) && !fs.existsSync(examplePath)) {
+				return json(res, { ok: false, message: "该模组没有配置文件" }, 404);
+			}
+			let modConfig = {};
+			if (fs.existsSync(configPath)) {
+				modConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+			}
+			return json(res, { ok: true, config: modConfig });
+		}
+		if (modConfigMatch && method === "PUT") {
+			const modEntry = modRegistry.list().find(m => m.name === modConfigMatch[1]);
+			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
+			const body = await readBody(req);
+			const newConfig = JSON.parse(body);
+			const configPath = path.join(modEntry.path, "config.json");
+			fs.writeFileSync(configPath, JSON.stringify(newConfig, null, "\t") + "\n", "utf-8");
+			return json(res, { ok: true, message: "配置已保存" });
+		}
+
+		// Mod manifest
+		const modManifestMatch = pathname.match(/^\/api\/mods\/(.+)\/manifest$/);
+		if (modManifestMatch && method === "GET") {
+			const modEntry = modRegistry.list().find(m => m.name === modManifestMatch[1]);
+			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
+			const manifestPath = path.join(modEntry.path, "manifest.json");
+			if (!fs.existsSync(manifestPath)) return json(res, { ok: false, message: "清单文件不存在" }, 404);
+			const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+			return json(res, { ok: true, manifest });
+		}
+
+		// Mod README
+		const modReadmeMatch = pathname.match(/^\/api\/mods\/(.+)\/readme$/);
+		if (modReadmeMatch && method === "GET") {
+			const modEntry = modRegistry.list().find(m => m.name === modReadmeMatch[1]);
+			if (!modEntry) return json(res, { ok: false, message: "模组未找到" }, 404);
+			const readmePath = path.join(modEntry.path, "README.md");
+			if (!fs.existsSync(readmePath)) return json(res, { ok: false, message: "无 README 文件" });
+			const readme = fs.readFileSync(readmePath, "utf-8");
+			return json(res, { ok: true, readme });
 		}
 
 		// Commands
@@ -341,7 +417,7 @@ export function startWebServer() {
 		server.listen(WEB_PORT, "0.0.0.0", () => {
 			const isCustom = config.web?.auth?.password;
 			const source = isCustom ? "配置文件" : "随机生成";
-			shared.logger.info(`WebUI 已启动: http://0.0.0.0:${WEB_PORT}/login?pwd=${AUTH_PASSWORD} [${source}]`);
+			shared.logger.info(`WebUI 已启动: http://127.0.0.1:${WEB_PORT}/login?pwd=${AUTH_PASSWORD} [${source}]`);
 			resolve();
 		});
 	});

@@ -18,8 +18,9 @@ const isLoginPage = computed(() => route.path === "/login");
 
 const navGroups = computed(() => [
 	{ label: "控制", items: routes.filter(r => ["/", "/commands", "/clients"].includes(r.path)) },
-	{ label: "管理", items: routes.filter(r => ["/mods", "/permissions", "/config"].includes(r.path)) },
-	{ label: "监控", items: routes.filter(r => ["/logs", "/chat"].includes(r.path)) }
+	{ label: "管理", items: routes.filter(r => ["/mods", "/permissions"].includes(r.path)) },
+	{ label: "监控", items: routes.filter(r => ["/logs", "/chat"].includes(r.path)) },
+	{ label: "系统", items: routes.filter(r => ["/config"].includes(r.path)) }
 ]);
 
 const iconMap = {

@@ -1,11 +1,11 @@
 {
-  "name": "qq",
-  "description": "",
-  "version": "1.0.0",
-  "author": "",
-  "enabled": true,
-  "entry": {
-    "server": "main.js",
-    "client": "commands.js"
-  }
+	"name": "qq",
+	"description": "",
+	"version": "1.0.0",
+	"author": "",
+	"enabled": true,
+	"entry": {
+		"server": "main.js",
+		"client": "commands.js"
+	}
 }

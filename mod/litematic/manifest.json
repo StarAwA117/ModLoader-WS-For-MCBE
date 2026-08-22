@@ -1,11 +1,11 @@
 {
-  "name": "litematic",
-  "description": "",
-  "version": "1.0.0",
-  "author": "",
-  "enabled": true,
-  "entry": {
-    "server": null,
-    "client": "main.js"
-  }
+	"name": "litematic",
+	"description": "",
+	"version": "1.0.0",
+	"author": "",
+	"enabled": true,
+	"entry": {
+		"server": null,
+		"client": "main.js"
+	}
 }

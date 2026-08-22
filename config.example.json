@@ -4,7 +4,13 @@
 		"port": 8080
 	},
 	"web": {
-		"port": 18889
+		"port": 18889,
+		"auth": {
+			"password": "",
+			"maxAttempts": 3,
+			"windowMs": 60000,
+			"lockoutMs": 60000
+		}
 	},
 	"logLevel": "info",
 	"commandPrefix": "$",

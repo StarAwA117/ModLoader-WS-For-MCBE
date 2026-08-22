@@ -1,11 +1,23 @@
 import { WebSocketServer } from "ws";
 import { v4 as uuidv4 } from "uuid";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import * as shared from "./lib/shared.js";
 import { closeLogStreams } from "./lib/logger.js";
 import { config, ClientModManager, ServerModManager, modRegistry } from "./lib/mods.js";
 import Utils from "./lib/utils.js";
 import Current from "./lib/current.js";
 import { startWebServer } from "./web/server.js";
+
+// 如果 config.json 不存在则从 config.example.json 复制
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const configPath = path.resolve(__dirname, "config.json");
+const configExamplePath = path.resolve(__dirname, "config.example.json");
+if (!fs.existsSync(configPath) && fs.existsSync(configExamplePath)) {
+	fs.copyFileSync(configExamplePath, configPath);
+	shared.logger.info("已从 config.example.json 初始化 config.json");
+}
 
 // 创建 WebSocket 服务端，监听端口 config.ws.port
 const server = new WebSocketServer({
