@@ -451,8 +451,8 @@ tr:hover td { background: var(--primary-glow); }
 /* ===== Tags ===== */
 .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; }
 .tag-owner { background: color-mix(in srgb, var(--c-mauve) 16%, transparent); color: var(--c-mauve); }
-.tag-op { background: color-mix(in srgb, var(--text-muted) 16%, transparent); color: var(--text-muted); }
-.tag-user { background: color-mix(in srgb, var(--text-muted) 10%, transparent); color: var(--text-muted); }
+.tag-op { background: color-mix(in srgb, var(--c-peach) 16%, transparent); color: var(--c-peach); }
+.tag-user { background: color-mix(in srgb, var(--c-sky) 16%, transparent); color: var(--c-sky); }
 .tag-blocker { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
 
 /* ===== Empty ===== */
@@ -498,8 +498,62 @@ tr:hover td { background: var(--primary-glow); }
 	cursor: pointer;
 	border: 2px solid transparent;
 	padding: 0;
-	transition: transform 0.12s, border-color 0.12s;
+	box-sizing: border-box;
+	transition: transform 0.12s, box-shadow 0.12s;
 }
 
 .theme-dot:hover { transform: scale(1.15); }
-.theme-dot.active { border-color: var(--text); }
+.theme-dot.active {
+	transform: scale(1.15);
+	box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px currentColor;
+}
+
+/* ===== Catppuccin 语义色（多彩）===== */
+:root,
+:root.theme-latte,
+:root.theme-frappe,
+:root.theme-macchiato,
+:root.theme-mocha {
+	--success: var(--c-green);
+	--warning: var(--c-yellow);
+	--info: var(--c-sky);
+	--accent: var(--c-mauve);
+}
+
+/* 在线/成功 脉冲状态点 */
+.status-dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--success);
+	vertical-align: middle;
+	margin-right: 6px;
+	animation: pulse-dot 1.8s infinite;
+}
+@keyframes pulse-dot {
+	0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--success) 70%, transparent); }
+	70% { box-shadow: 0 0 0 6px transparent; }
+	100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* 成功按钮（绿底深字，保证各主题可读） */
+.btn-success { background: var(--success); color: #1e1e2e; }
+.btn-success:hover { opacity: 0.85; }
+
+/* 多彩徽章 */
+.badge-blue { background: var(--primary-dim); color: var(--primary); }
+.badge-success { background: color-mix(in srgb, var(--success) 16%, transparent); color: var(--success); }
+.badge-warning { background: color-mix(in srgb, var(--warning) 16%, transparent); color: var(--warning); }
+.badge-danger { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
+.badge-info { background: color-mix(in srgb, var(--info) 16%, transparent); color: var(--info); }
+.badge-accent { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+
+/* 统计数值多彩 */
+.stat-card .value.green { color: var(--success); }
+.stat-card .value.warning { color: var(--warning); }
+.stat-card .value.info { color: var(--info); }
+.stat-card .value.accent { color: var(--accent); }
+
+/* 日志：成功行 */
+.log-line.success { color: var(--success); }

@@ -77,7 +77,7 @@ onMounted(refresh);
 	<div class="card">
 		<div class="card-header">
 			<h2>可用命令</h2>
-			<span class="badge badge-blue">{{ commands.length }} 个</span>
+			<span class="badge badge-info">{{ commands.length }} 个</span>
 		</div>
 		<div v-if="commands.length === 0" class="empty-state">
 			<p>请先连接 Minecraft 客户端</p>
@@ -93,7 +93,7 @@ onMounted(refresh);
 				</thead>
 				<tbody>
 					<tr v-for="cmd in commands" :key="cmd.name">
-						<td style="font-family: monospace; color: var(--primary);">{{ cmd.name }}</td>
+						<td style="font-family: monospace; color: var(--info);">{{ cmd.name }}</td>
 						<td>{{ cmd.description }}</td>
 						<td><span :class="'tag ' + levelColors[cmd.level]">{{ levelNames[cmd.level] }}</span></td>
 					</tr>

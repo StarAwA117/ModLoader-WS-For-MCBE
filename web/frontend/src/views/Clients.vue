@@ -49,7 +49,7 @@ onUnmounted(() => clearInterval(timer));
 				<div style="flex: 1;">
 					<div style="font-weight: 500; font-size: 14px;">
 						{{ c.localPlayerName || c.id.slice(0, 8) + "..." }}
-						<span v-if="c.isMain" class="badge" style="margin-left: 6px;">主客户端</span>
+						<span v-if="c.isMain" class="badge badge-accent" style="margin-left: 6px;">主客户端</span>
 					</div>
 					<div class="client-meta">
 						<span v-if="c.localPlayerName" style="font-family: monospace;">{{ c.id.slice(0, 8) }}...</span>

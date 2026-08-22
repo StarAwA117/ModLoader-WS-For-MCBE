@@ -6,7 +6,7 @@ const permissions = ref({ owner: "", op: [], user: [], blocker: [] });
 const newPlayer = ref({ op: "", user: "", blocker: "" });
 const groups = ["owner", "op", "user", "blocker"];
 const groupNames = { owner: "服主", op: "管理员", user: "普通用户", blocker: "屏蔽名单" };
-const groupColors = { owner: "tag-owner", op: "tag-op", user: "tag-user", blocker: "tag-blocker" };
+const groupColors = { owner: "badge-accent", op: "badge-warning", user: "badge-info", blocker: "badge-danger" };
 
 async function refresh() {
 	permissions.value = await api.getPermissions();

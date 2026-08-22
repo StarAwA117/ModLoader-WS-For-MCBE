@@ -10,10 +10,10 @@ const authChecked = computed(() => !!sessionStorage.getItem("auth_token"));
 
 // ===== Catppuccin 主题切换 =====
 const themes = [
-	{ key: "latte", label: "Latte 拿铁", bg: "linear-gradient(135deg, #eff1f5 50%, #1e66f5 50%)" },
-	{ key: "frappe", label: "Frappé 法布蕾", bg: "linear-gradient(135deg, #303446 50%, #8caaee 50%)" },
-	{ key: "macchiato", label: "Macchiato 玛奇朵", bg: "linear-gradient(135deg, #24273a 50%, #8aadf4 50%)" },
-	{ key: "mocha", label: "Mocha 摩卡", bg: "linear-gradient(135deg, #1e1e2e 50%, #89b4fa 50%)" }
+	{ key: "latte", label: "Latte 拿铁", base: "#eff1f5", ring: "#1e66f5" },
+	{ key: "frappe", label: "Frappé 法布蕾", base: "#303446", ring: "#8caaee" },
+	{ key: "macchiato", label: "Macchiato 玛奇朵", base: "#24273a", ring: "#8aadf4" },
+	{ key: "mocha", label: "Mocha 摩卡", base: "#1e1e2e", ring: "#89b4fa" }
 ];
 const currentTheme = ref(localStorage.getItem("starws-theme") || "mocha");
 
@@ -109,7 +109,7 @@ function navigate(path) {
 					:key="t.key"
 					class="theme-dot"
 					:class="{ active: currentTheme === t.key }"
-					:style="{ background: t.bg }"
+					:style="{ background: t.base, borderColor: t.ring, color: t.ring }"
 					:title="t.label"
 					@click="setTheme(t.key)"
 				></button>

@@ -44,7 +44,7 @@ onUnmounted(() => clearInterval(timer));
 				v-for="(msg, i) in messages"
 				:key="i"
 				class="log-line"
-				style="color: #94a3b8;"
+				style="color: var(--text-muted);"
 			>{{ msg }}</div>
 		</div>
 
