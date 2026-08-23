@@ -518,7 +518,8 @@ async function handleAPI(req, res, url) {
 				const targetTag = release.tag_name;
 				if (!targetTag) throw new Error("无法获取最新版本标签");
 				await execAsync("git fetch --all", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
-				await execAsync(`git checkout ${targetTag}`, { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
+				await execAsync("git reset --hard HEAD", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
+				await execAsync(`git checkout -f ${targetTag}`, { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
 				await execAsync("npm install", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024, timeout: 300000 });
 				json(res, { ok: true, message: "更新完成，正在退出进程，请手动重启服务。" });
 				setTimeout(() => process.exit(0), 2000);
@@ -536,7 +537,8 @@ async function handleAPI(req, res, url) {
 			rollingBack = true;
 			try {
 				await execAsync("git fetch --all", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
-				await execAsync(`git checkout ${targetTag}`, { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
+				await execAsync("git reset --hard HEAD", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
+				await execAsync(`git checkout -f ${targetTag}`, { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
 				await execAsync("npm install", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024, timeout: 300000 });
 				json(res, { ok: true, message: "回退完成，正在退出进程，请手动重启服务。" });
 				setTimeout(() => process.exit(0), 2000);
