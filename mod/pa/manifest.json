@@ -3,7 +3,6 @@
 	"description": "为 MCBE 提供 Pi AI 互通支持",
 	"version": "1.0.0",
 	"author": "FLT18355",
-	"enabled": false,
 	"entry": {
 		"server": null,
 		"client": "main.js"

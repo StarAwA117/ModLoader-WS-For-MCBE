@@ -3,7 +3,6 @@
 	"description": "包含坐标测距、偏移与填充等一系列功能",
 	"version": "1.0.0",
 	"author": "StarAwA117",
-	"enabled": false,
 	"entry": {
 		"server": null,
 		"client": "main.js"

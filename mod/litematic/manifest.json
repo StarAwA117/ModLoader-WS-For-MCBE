@@ -3,7 +3,6 @@
 	"description": "在任意环境下导入投影建筑",
 	"version": "1.0.0",
 	"author": "StarAwA117 & Hydrooxygen",
-	"enabled": false,
 	"entry": {
 		"server": null,
 		"client": "main.js"

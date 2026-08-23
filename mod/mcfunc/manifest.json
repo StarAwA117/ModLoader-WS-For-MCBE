@@ -3,7 +3,6 @@
 	"description": "在任意环境下通过 WebSocket 直接运行函数包",
 	"version": "1.0.0",
 	"author": "StarAwA117",
-	"enabled": false,
 	"entry": {
 		"server": null,
 		"client": "main.js"

@@ -3,7 +3,6 @@
 	"description": "允许使用 AI 在 MCBE 聊天或执行命令",
 	"version": "1.0.0",
 	"author": "StarAwA117",
-	"enabled": false,
 	"entry": {
 		"server": "main.js",
 		"client": "main.js"

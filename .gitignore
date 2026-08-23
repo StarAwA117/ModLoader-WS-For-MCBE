@@ -2,6 +2,7 @@
 config.json
 permission.json
 mod/**/config.json
+mod/mods_config.json
 
 # Resources
 resources/*
