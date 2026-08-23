@@ -2,18 +2,7 @@
 defineOptions({ name: "ConfigField" });
 const props = defineProps(["field", "config", "depth"]);
 
-const labelMap = {
-	baseURL: "API 地址", apiKey: "API 密钥", model: "模型", max_tokens: "最大 Token",
-	stream: "流式输出", chatCooldown: "对话冷却 (ms)", basePath: "资源路径",
-	playPercussion: "打击乐", enabled: "启用", groupId: "群号", host: "主机",
-	port: "端口", accessToken: "访问令牌", attack: "攻击命令", ad: "广告消息",
-	adInterval: "广告间隔 (ms)", messages: "系统提示词", content: "提示词内容",
-	role: "角色", name: "名称", description: "描述", version: "版本", author: "作者",
-	gmsg: "获取消息命令", smsg: "发送消息命令", options: "选项", models: "模型配置",
-	chat: "对话模型", command: "命令模型", tool: "工具模型", thinking: "思维链",
-	type: "类型", enabled: "启用"
-};
-function lbl(key) { return labelMap[key] || key; }
+function lbl(key) { return key; }
 
 function getVal(obj, path) { return path.split(".").reduce((o, k) => o?.[k], obj); }
 function setVal(obj, path, val) {

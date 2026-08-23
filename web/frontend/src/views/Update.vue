@@ -66,12 +66,19 @@ async function loadTags() {
 }
 
 function getActionLabel() {
-	if (!latestVersion.value || !selectedTag.value) return "更新";
+	if (!selectedTag.value) return "更新";
 	const selVer = selectedTag.value.replace(/^v/, "");
-	const latVer = latestVersion.value;
-	if (selVer === latVer) return "保持";
-	if (selVer < latVer) return "回退";
-	return "更新";
+	const curVer = currentVersion.value.replace(/^v/, "");
+	if (selVer === curVer) return "保持";
+	const selParts = selVer.split(".").map(Number);
+	const curParts = curVer.split(".").map(Number);
+	for (let i = 0; i < Math.max(selParts.length, curParts.length); i++) {
+		const s = selParts[i] || 0;
+		const c = curParts[i] || 0;
+		if (s > c) return "更新";
+		if (s < c) return "回退";
+	}
+	return "保持";
 }
 
 async function confirmAction() {
