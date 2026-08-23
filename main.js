@@ -24,4 +24,11 @@ if (needInstall()) {
 	}
 }
 
+const configPath = path.join(__dirname, "config.json");
+const configExamplePath = path.join(__dirname, "config.example.json");
+if (!fs.existsSync(configPath) && fs.existsSync(configExamplePath)) {
+	fs.copyFileSync(configExamplePath, configPath);
+	console.log("< 已从 config.example.json 初始化 config.json");
+}
+
 await import("./ws.js");
