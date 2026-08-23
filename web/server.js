@@ -2,6 +2,8 @@ import http from "http";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
+import { exec } from "child_process";
+import { promisify } from "util";
 import { fileURLToPath } from "url";
 import { config, reloadConfig, eventBus, ServerModManager, ClientModManager, modRegistry } from "../lib/mods.js";
 import Current from "../lib/current.js";
@@ -9,6 +11,8 @@ import PermissionManager from "../lib/permission.js";
 import Command from "../lib/command.js";
 import { logger } from "../lib/logger.js";
 import { collectCommands as collectTerminalCommands } from "../lib/readline.js";
+
+const execAsync = promisify(exec);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,7 +26,13 @@ const AUTH_MAX_ATTEMPTS = authConfig.maxAttempts || 3;
 const AUTH_WINDOW_MS = authConfig.windowMs || 60000;
 const AUTH_LOCKOUT_MS = authConfig.lockoutMs || 60000;
 
+const GITHUB_API = "https://api.github.com/repos/StarAwA117/ModLoader-WS-For-MCBE";
+const REPO_ROOT = path.resolve(__dirname, "..");
+const CURRENT_VERSION = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf-8")).version;
+
 let logBuffer = [];
+let updating = false;
+let rollingBack = false;
 const LOG_BUFFER_MAX = 500;
 
 const originalLog = logger.log.bind(logger);
@@ -470,7 +480,70 @@ async function handleAPI(req, res, url) {
 		// System
 		if (pathname === "/api/system/process" && method === "GET") {
 			const mem = process.memoryUsage();
-			return json(res, { pid: process.pid, uptime: process.uptime(), memory: { rss: mem.rss, heapUsed: mem.heapUsed, heapTotal: mem.heapTotal }, nodeVersion: process.version, platform: process.platform });
+			return json(res, { pid: process.pid, uptime: process.uptime(), memory: { rss: mem.rss, heapUsed: mem.heapUsed, heapTotal: mem.heapTotal }, nodeVersion: process.version, platform: process.platform, version: CURRENT_VERSION });
+		}
+
+		// Update
+		async function githubFetch(apiPath) {
+			const res = await fetch(`${GITHUB_API}${apiPath}`, {
+				headers: { "Accept": "application/vnd.github+json", "User-Agent": "ModLoader-UpdateChecker" }
+			});
+			if (!res.ok) throw new Error(`GitHub API 请求失败: HTTP ${res.status}`);
+			return res.json();
+		}
+
+		if (pathname === "/api/update/check" && method === "GET") {
+			try {
+				const release = await githubFetch("/releases/latest");
+				const latestVersion = release.tag_name?.replace(/^v/, "") || null;
+				return json(res, { current: CURRENT_VERSION, latest: latestVersion, hasUpdate: latestVersion && latestVersion !== CURRENT_VERSION, releaseName: release.name || null, releaseBody: release.body || null, publishedAt: release.published_at || null });
+			} catch (e) {
+				return json(res, { current: CURRENT_VERSION, latest: null, hasUpdate: false, error: e.message }, 502);
+			}
+		}
+
+		if (pathname === "/api/update/tags" && method === "GET") {
+			try {
+				const releases = await githubFetch("/releases?per_page=100");
+				return json(res, { tags: releases.map(r => ({ name: r.tag_name, name: r.name || r.tag_name, commit: r.target_commitish || null })) });
+			} catch (e) {
+				return json(res, { tags: [], error: e.message }, 502);
+			}
+		}
+
+		if (pathname === "/api/update/do" && method === "POST") {
+			updating = true;
+			try {
+				const release = await githubFetch("/releases/latest");
+				const targetTag = release.tag_name;
+				if (!targetTag) throw new Error("无法获取最新版本标签");
+				await execAsync("git fetch --all", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
+				await execAsync(`git checkout ${targetTag}`, { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
+				await execAsync("npm install", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024, timeout: 300000 });
+				json(res, { ok: true, message: "更新完成，正在退出进程，请手动重启服务。" });
+				setTimeout(() => process.exit(0), 2000);
+			} catch (e) {
+				updating = false;
+				return json(res, { ok: false, message: "更新失败: " + e.message });
+			}
+		}
+
+		if (pathname === "/api/update/rollback" && method === "POST") {
+			const body = await readBody(req);
+			let targetTag = null;
+			try { targetTag = JSON.parse(body).tag; } catch {}
+			if (!targetTag) return json(res, { ok: false, message: "请指定回退版本标签" }, 400);
+			rollingBack = true;
+			try {
+				await execAsync("git fetch --all", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
+				await execAsync(`git checkout ${targetTag}`, { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
+				await execAsync("npm install", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024, timeout: 300000 });
+				json(res, { ok: true, message: "回退完成，正在退出进程，请手动重启服务。" });
+				setTimeout(() => process.exit(0), 2000);
+			} catch (e) {
+				rollingBack = false;
+				return json(res, { ok: false, message: "回退失败: " + e.message });
+			}
 		}
 
 		json(res, { error: "Not Found" }, 404);

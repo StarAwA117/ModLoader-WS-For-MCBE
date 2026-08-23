@@ -409,6 +409,12 @@ body.modal-open { overflow: hidden; }
 	display: flex; align-items: center; justify-content: flex-end; gap: 8px;
 	padding: 12px 20px; border-top: 1px solid var(--border); flex-shrink: 0;
 }
+.modal-select {
+	width: 100%; padding: 8px 12px; border-radius: var(--radius); border: 1px solid var(--border);
+	background: var(--bg-input); color: var(--text); font-size: 14px; font-family: inherit;
+	outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.modal-select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--primary-dim); }
 .modal-msg { margin-right: auto; font-size: 13px; color: var(--text-muted); }
 .modal-markdown { font-size: 13px; line-height: 1.7; color: var(--text-secondary); }
 .modal-markdown h1, .modal-markdown h2, .modal-markdown h3 { color: var(--text); margin: 12px 0 6px; }

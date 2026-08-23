@@ -16,12 +16,12 @@ onMounted(() => {
 
 const isLoginPage = computed(() => route.path === "/login");
 
-const navGroups = computed(() => [
-	{ label: "控制", items: routes.filter(r => ["/", "/commands", "/clients"].includes(r.path)) },
-	{ label: "管理", items: routes.filter(r => ["/mods", "/permissions"].includes(r.path)) },
-	{ label: "监控", items: routes.filter(r => ["/logs", "/chat"].includes(r.path)) },
-	{ label: "系统", items: routes.filter(r => ["/config"].includes(r.path)) }
-]);
+	const navGroups = computed(() => [
+		{ label: "控制", items: routes.filter(r => ["/", "/commands", "/clients"].includes(r.path)) },
+		{ label: "管理", items: routes.filter(r => ["/mods", "/permissions"].includes(r.path)) },
+		{ label: "监控", items: routes.filter(r => ["/logs", "/chat"].includes(r.path)) },
+		{ label: "系统", items: routes.filter(r => ["/update", "/config"].includes(r.path)) }
+	]);
 
 const iconMap = {
 	dashboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
@@ -32,12 +32,22 @@ const iconMap = {
 	logs: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
 	chat: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
 	config: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+	update: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M16 16h5v5"/></svg>`,
 };
 
 function navigate(path) {
 	router.push(path);
 	sidebarOpen.value = false;
 }
+
+import { watch } from "vue";
+watch(sidebarOpen, (v) => {
+	if (v) {
+		document.body.classList.add("modal-open");
+	} else {
+		document.body.classList.remove("modal-open");
+	}
+});
 </script>
 
 <template>

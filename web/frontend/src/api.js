@@ -59,6 +59,10 @@ export const api = {
 	getChatLog: () => request("/chat"),
 	sendChat: (message) => request("/chat", { method: "POST", body: JSON.stringify({ message }) }),
 	getProcess: () => request("/system/process"),
+	checkUpdate: () => request("/update/check"),
+	getTags: () => request("/update/tags"),
+	doUpdate: () => request("/update/do", { method: "POST" }),
+	rollback: (tag) => request("/update/rollback", { method: "POST", body: JSON.stringify({ tag }) }),
 };
 
 export function useToast() {
