@@ -9,13 +9,6 @@ async function refresh() {
 	clients.value = await api.getClients();
 }
 
-async function tellClient(id) {
-	const msg = prompt("输入要发送的消息:");
-	if (!msg) return;
-	const res = await api.tellClient(id, msg);
-	if (!res.ok) alert(res.message);
-}
-
 async function setMain(id) {
 	const res = await api.setMainClient(id);
 	if (res.ok) await refresh();
@@ -48,17 +41,15 @@ onUnmounted(() => clearInterval(timer));
 			>
 				<div style="flex: 1;">
 					<div style="font-weight: 500; font-size: 14px;">
-						{{ c.localPlayerName || c.id.slice(0, 8) + "..." }}
+						{{ c.localPlayerName || "未命名客户端" }}
 						<span v-if="c.isMain" class="badge" style="margin-left: 6px;">主客户端</span>
 					</div>
 					<div class="client-meta">
-						<span v-if="c.localPlayerName" style="font-family: monospace;">{{ c.id.slice(0, 8) }}...</span>
 						<span>IP: {{ c.ip }}</span>
 					</div>
 				</div>
-				<div class="btn-group">
-					<button class="btn btn-ghost btn-sm" @click="tellClient(c.id)">发消息</button>
-					<button v-if="!c.isMain" class="btn btn-primary btn-sm" @click="setMain(c.id)">设为主</button>
+				<div v-if="!c.isMain" class="btn-group">
+					<button class="btn btn-primary btn-sm" @click="setMain(c.id)">设为主</button>
 				</div>
 			</div>
 		</div>
@@ -80,7 +71,5 @@ onUnmounted(() => clearInterval(timer));
 	font-size: 12px;
 	color: var(--text-muted);
 	margin-top: 2px;
-	display: flex;
-	gap: 12px;
 }
 </style>

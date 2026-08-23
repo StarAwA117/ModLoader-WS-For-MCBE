@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { routes } from "./router";
 
@@ -12,6 +12,10 @@ onMounted(() => {
 	if (sessionStorage.getItem("auth_token")) {
 		authChecked.value = true;
 	}
+});
+
+watch(() => route.path, () => {
+	authChecked.value = !!sessionStorage.getItem("auth_token");
 });
 
 const isLoginPage = computed(() => route.path === "/login");
@@ -40,7 +44,6 @@ function navigate(path) {
 	sidebarOpen.value = false;
 }
 
-import { watch } from "vue";
 watch(sidebarOpen, (v) => {
 	if (v) {
 		document.body.classList.add("modal-open");
