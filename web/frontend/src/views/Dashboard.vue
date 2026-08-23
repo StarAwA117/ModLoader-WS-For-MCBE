@@ -27,11 +27,11 @@ onUnmounted(() => clearInterval(timer));
 		<div class="stats-grid">
 			<div class="stat-card">
 				<div class="label">服务器状态</div>
-				<div class="value green"><span class="status-dot"></span>运行中</div>
+				<div class="value blue">运行中</div>
 			</div>
 			<div class="stat-card">
 				<div class="label">运行时间</div>
-				<div class="value green">{{ formatUptime(status.server.uptime) }}</div>
+				<div class="value blue">{{ formatUptime(status.server.uptime) }}</div>
 			</div>
 			<div class="stat-card">
 				<div class="label">连接客户端</div>
@@ -65,7 +65,7 @@ onUnmounted(() => clearInterval(timer));
 							<td style="font-family: monospace; font-size: 12px;">{{ c.id.slice(0, 8) }}...</td>
 							<td>{{ c.ip }}</td>
 							<td>
-								<span :class="c.isMain ? 'badge badge-accent' : 'tag tag-user'">
+								<span :class="c.isMain ? 'badge' : 'tag tag-user'">
 									{{ c.isMain ? "主客户端" : "普通" }}
 								</span>
 							</td>
@@ -108,7 +108,7 @@ onUnmounted(() => clearInterval(timer));
 				</div>
 				<div class="stat-card">
 					<div class="label">内存使用</div>
-					<div class="value info">{{ formatBytes(process.memory.rss) }}</div>
+					<div class="value blue">{{ formatBytes(process.memory.rss) }}</div>
 				</div>
 				<div class="stat-card">
 					<div class="label">堆内存</div>

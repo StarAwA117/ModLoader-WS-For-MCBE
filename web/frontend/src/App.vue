@@ -8,27 +8,10 @@ const router = useRouter();
 const sidebarOpen = ref(false);
 const authChecked = ref(false);
 
-/* ===== Catppuccin 主题切换 ===== */
-const themes = [
-	{ key: "latte", label: "Latte 拿铁", base: "#eff1f5", ring: "#1e66f5" },
-	{ key: "frappe", label: "Frappé 法布蕾", base: "#303446", ring: "#8caaee" },
-	{ key: "macchiato", label: "Macchiato 玛奇朵", base: "#24273a", ring: "#8aadf4" },
-	{ key: "mocha", label: "Mocha 摩卡", base: "#1e1e2e", ring: "#89b4fa" }
-];
-const currentTheme = ref("mocha");
-function applyTheme(key) {
-	currentTheme.value = key;
-	document.documentElement.className = key === "mocha" ? "" : "theme-" + key;
-	localStorage.setItem("catppuccin-theme", key);
-}
-function setTheme(key) { applyTheme(key); }
-
 onMounted(() => {
 	if (sessionStorage.getItem("auth_token")) {
 		authChecked.value = true;
 	}
-	const saved = localStorage.getItem("catppuccin-theme");
-	if (saved) applyTheme(saved);
 });
 
 watch(() => route.path, () => {
@@ -116,20 +99,6 @@ watch(sidebarOpen, (v) => {
 					</a>
 				</template>
 			</nav>
-			<div class="theme-switcher">
-				<span class="theme-switcher-label">主题</span>
-				<div class="theme-dots">
-					<button
-						v-for="t in themes"
-						:key="t.key"
-						class="theme-dot"
-						:class="{ active: currentTheme === t.key }"
-						:style="{ background: t.base, borderColor: t.ring, color: t.ring }"
-						:title="t.label"
-						@click="setTheme(t.key)"
-					></button>
-					</div>
-			</div>
 		</aside>
 
 		<main class="main-content">
