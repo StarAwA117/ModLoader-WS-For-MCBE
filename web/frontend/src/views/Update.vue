@@ -1,6 +1,9 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import { api } from "../api";
+import { useModal } from "../composables/useModal";
+
+const { confirm, alert } = useModal();
 
 const currentVersion = ref("加载中...");
 const latestVersion = ref(null);
@@ -86,7 +89,8 @@ async function confirmAction() {
 	const tag = selectedTag.value.startsWith("v") ? selectedTag.value : `v${selectedTag.value}`;
 	const label = getActionLabel();
 	if (label === "保持") { closeModal(); return; }
-	if (!confirm(`确定要${label === "更新" ? "更新" : "回退"}到 ${tag} 吗？\n\n操作完成后进程将退出，请手动重启服务。`)) return;
+	const ok = await confirm(`确定要${label === "更新" ? "更新" : "回退"}到 ${tag} 吗？\n\n操作完成后进程将退出，请手动重启服务。`);
+	if (!ok) return;
 	modalStatus.value = { loading: true, message: `${label === "更新" ? "更新" : "回退"}中，请稍候...` };
 	try {
 		const res = label === "更新" ? await api.doUpdate() : await api.rollback(tag);

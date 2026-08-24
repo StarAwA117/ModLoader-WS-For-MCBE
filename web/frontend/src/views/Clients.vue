@@ -1,18 +1,37 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
 import { api } from "../api";
+import { useModal } from "../composables/useModal";
 
+const { alert, confirm } = useModal();
 const clients = ref([]);
+const selected = ref(null);
+const showDetail = ref(false);
 let timer = null;
 
 async function refresh() {
 	clients.value = await api.getClients();
 }
 
-async function setMain(id) {
-	const res = await api.setMainClient(id);
-	if (res.ok) await refresh();
-	else alert(res.message);
+function openDetail(c) {
+	selected.value = c;
+	showDetail.value = true;
+}
+
+async function setMain() {
+	if (!selected.value) return;
+	const res = await api.setMainClient(selected.value.id);
+	if (res.ok) { showDetail.value = false; await refresh(); }
+	else await alert(res.message);
+}
+
+async function disconnect() {
+	if (!selected.value) return;
+	const ok = await confirm(`确定断开 ${selected.value.localPlayerName || selected.value.id.slice(0, 8)} 的连接？`);
+	if (!ok) return;
+	const res = await api.disconnectClient(selected.value.id);
+	if (res.ok) { showDetail.value = false; await refresh(); }
+	else await alert(res.message);
 }
 
 onMounted(() => {
@@ -38,6 +57,7 @@ onUnmounted(() => clearInterval(timer));
 				v-for="c in clients"
 				:key="c.id"
 				class="client-card"
+				@click="openDetail(c)"
 			>
 				<div style="flex: 1;">
 					<div style="font-weight: 500; font-size: 14px;">
@@ -48,9 +68,27 @@ onUnmounted(() => clearInterval(timer));
 						<span>IP: {{ c.ip }}</span>
 					</div>
 				</div>
-				<div v-if="!c.isMain" class="btn-group">
-					<button class="btn btn-primary btn-sm" @click="setMain(c.id)">设为主</button>
-				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- 客户端详情弹窗 -->
+	<div v-if="showDetail && selected" class="modal-overlay" @click.self="showDetail = false">
+		<div class="modal" style="max-width: 420px;">
+			<div class="modal-header">
+				<h3>客户端详情</h3>
+				<button class="modal-close" @click="showDetail = false">×</button>
+			</div>
+			<div class="modal-body">
+				<div class="detail-row"><span class="detail-label">名称</span><span>{{ selected.localPlayerName || "未命名" }}</span></div>
+				<div class="detail-row"><span class="detail-label">IP</span><span style="font-family: monospace;">{{ selected.ip }}</span></div>
+				<div class="detail-row"><span class="detail-label">UUID</span><span style="font-family: monospace; font-size: 12px;">{{ selected.id }}</span></div>
+				<div class="detail-row"><span class="detail-label">角色</span><span :class="selected.isMain ? 'badge' : 'tag tag-user'">{{ selected.isMain ? "主客户端" : "普通" }}</span></div>
+				<div class="detail-row"><span class="detail-label">连接时间</span><span>{{ new Date(selected.connectedAt).toLocaleString() }}</span></div>
+			</div>
+			<div class="modal-footer">
+				<button v-if="!selected.isMain" class="btn btn-primary btn-sm" @click="setMain">切换</button>
+				<button class="btn btn-danger btn-sm" @click="disconnect">断开</button>
 			</div>
 		</div>
 	</div>
@@ -65,11 +103,28 @@ onUnmounted(() => clearInterval(timer));
 	background: var(--bg-input);
 	border-radius: 8px;
 	margin-bottom: 8px;
+	cursor: pointer;
+	transition: background 0.15s;
 }
+.client-card:hover { background: var(--border); }
 
 .client-meta {
 	font-size: 12px;
 	color: var(--text-muted);
 	margin-top: 2px;
+}
+
+.detail-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--border);
+	font-size: 14px;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label {
+	color: var(--text-muted);
+	font-size: 13px;
 }
 </style>

@@ -67,9 +67,6 @@ server.on("connection", (ws) => {
 	// 通知服务端 Mod 客户端已连接
 	ServerModManager.onClientConnect(ws, isMainClient);
 
-	// 广播连接通知
-	ws.tell(`§e${config.ws.name} | §fSystem > §i已连接`);
-
 	// 处理客户端消息
 	ws.on("message", (message) => {
 		// 仅 JSON 解析需捕获，非 JSON 消息直接忽略；
@@ -141,7 +138,6 @@ async function destroy() {
 
 	logger.info("正在通知客户端断开连接...");
 	server.clients.forEach((client) => {
-		client.tell(`§c${config.ws.name} | §fSystem > §i已关闭连接`);
 		client.runCommand("/closewebsocket").catch(() => {});
 		client.close();
 	});

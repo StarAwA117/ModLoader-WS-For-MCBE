@@ -2,6 +2,10 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { routes } from "./router";
+import Modal from "./components/Modal.vue";
+import { useModal } from "./composables/useModal";
+
+const { confirm } = useModal();
 
 const route = useRoute();
 const router = useRouter();
@@ -42,6 +46,14 @@ const iconMap = {
 function navigate(path) {
 	router.push(path);
 	sidebarOpen.value = false;
+}
+
+async function logout() {
+	const ok = await confirm("确定退出登录？");
+	if (ok) {
+		sessionStorage.removeItem("auth_token");
+		router.replace("/login");
+	}
 }
 
 watch(sidebarOpen, (v) => {
@@ -99,10 +111,17 @@ watch(sidebarOpen, (v) => {
 					</a>
 				</template>
 			</nav>
+			<div class="sidebar-footer">
+				<a class="nav-item" @click="logout" style="cursor: pointer;">
+					<span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+					退出登录
+				</a>
+			</div>
 		</aside>
 
 		<main class="main-content">
 			<router-view />
 		</main>
 	</div>
+	<Modal />
 </template>

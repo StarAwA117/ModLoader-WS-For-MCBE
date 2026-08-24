@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick } from "vue";
 import { api } from "../api";
+import { useModal } from "../composables/useModal";
 
+const { alert } = useModal();
 const messages = ref([]);
 const input = ref("");
 const chatRef = ref(null);
@@ -18,7 +20,7 @@ async function send() {
 	const msg = input.value.trim();
 	input.value = "";
 	const res = await api.sendChat(msg);
-	if (!res.ok) alert(res.message);
+	if (!res.ok) await alert(res.message);
 	await refresh();
 }
 

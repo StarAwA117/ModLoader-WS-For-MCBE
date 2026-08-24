@@ -462,6 +462,36 @@ async function handleAPI(req, res, url) {
 			}
 			return json(res, { ok: false, message: "客户端未找到" }, 404);
 		}
+		const clientDisconnectMatch = pathname.match(/^\/api\/clients\/(.+)\/disconnect$/);
+		if (clientDisconnectMatch && method === "POST") {
+			const clientId = clientDisconnectMatch[1];
+			for (const [ws] of Current.clientMods) {
+				if (ws.id === clientId) {
+					if (ws === Current.client) Current.client = null;
+					try { await ws.runCommand("/closewebsocket"); } catch {}
+					ws.close();
+					return json(res, { ok: true });
+				}
+			}
+			return json(res, { ok: false, message: "客户端未找到" }, 404);
+		}
+
+		// System
+		if (pathname === "/api/system/kill" && method === "POST") {
+			json(res, { ok: true, message: "进程已销毁" });
+			setTimeout(() => process.exit(1), 500);
+			return;
+		}
+		if (pathname === "/api/system/restart" && method === "POST") {
+			json(res, { ok: true, message: "正在重启..." });
+			setTimeout(async () => {
+				try { await destroy(); } catch {}
+				const { spawn } = await import("child_process");
+				spawn(process.argv[0], process.argv.slice(1), { detached: true, stdio: "inherit" }).unref();
+				process.exit(0);
+			}, 500);
+			return;
+		}
 
 		// Logs
 		if (pathname === "/api/logs" && method === "GET") {

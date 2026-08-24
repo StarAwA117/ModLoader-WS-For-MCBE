@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { api } from "../api";
+import { useModal } from "../composables/useModal";
 
+const { alert, confirm } = useModal();
 const permissions = ref({ owner: "", op: [], user: [], blocker: [] });
 const newPlayer = ref({ op: "", user: "", blocker: "" });
 const groups = ["owner", "op", "user", "blocker"];
@@ -22,15 +24,16 @@ async function addPlayer(group) {
 		newPlayer.value[group] = "";
 		await refresh();
 	} else {
-		alert(res.message || "添加失败");
+		await alert(res.message || "添加失败");
 	}
 }
 
 async function removePlayer(group, player) {
-	if (!confirm(`确定移除 ${player} 的 ${groupNames[group]} 权限？`)) return;
+	const ok = await confirm(`确定移除 ${player} 的 ${groupNames[group]} 权限？`);
+	if (!ok) return;
 	const res = await api.removePermission(group, player);
 	if (res.ok) await refresh();
-	else alert(res.message || "移除失败");
+	else await alert(res.message || "移除失败");
 }
 
 onMounted(refresh);
@@ -79,7 +82,7 @@ onMounted(refresh);
 				>
 					<span>{{ player }}</span>
 					<button
-						style="background: none; border: none; color: var(--danger); cursor: pointer; font-size: 14px; padding: 0 2px;"
+						style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 14px; padding: 0 2px;"
 						@click="removePlayer(group, player)"
 					>×</button>
 				</div>

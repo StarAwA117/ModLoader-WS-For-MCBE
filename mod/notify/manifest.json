@@ -1,0 +1,10 @@
+{
+	"name": "Notify",
+	"description": "客户端连接/断开通知",
+	"version": "1.0.0",
+	"author": "StarAwA117",
+	"entry": {
+		"server": "main.js",
+		"client": null
+	}
+}

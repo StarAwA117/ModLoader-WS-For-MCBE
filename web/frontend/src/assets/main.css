@@ -173,6 +173,8 @@ body::after {
 /* ===== Nav ===== */
 .sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
 
+.sidebar-footer { border-top: 1px solid var(--border); padding: 8px 0; }
+
 .sidebar-nav::-webkit-scrollbar { width: 3px; }
 .sidebar-nav::-webkit-scrollbar-thumb { background: var(--primary-dim); border-radius: 3px; }
 

@@ -1,7 +1,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
 import { api, formatUptime, formatBytes } from "../api";
+import { useModal } from "../composables/useModal";
 
+const { confirm, alert } = useModal();
 const status = ref(null);
 const process = ref(null);
 let timer = null;
@@ -12,6 +14,20 @@ async function refresh() {
 		status.value = s;
 		process.value = p;
 	} catch {}
+}
+
+async function killProcess() {
+	const ok = await confirm("确定销毁进程？此操作将立即终止服务器。");
+	if (!ok) return;
+	const res = await api.killProcess();
+	if (res.ok) await alert(res.message);
+}
+
+async function restartServer() {
+	const ok = await confirm("确定重启服务器？将关闭当前进程并重新启动。");
+	if (!ok) return;
+	const res = await api.restartServer();
+	if (res.ok) await alert(res.message);
 }
 
 onMounted(() => {
@@ -118,6 +134,16 @@ onUnmounted(() => clearInterval(timer));
 					<div class="label">Node.js</div>
 					<div class="value" style="font-size: 16px;">{{ process.nodeVersion }}</div>
 				</div>
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="card-header">
+				<h2>服务器控制</h2>
+			</div>
+			<div style="display: flex; gap: 8px;">
+				<button class="btn btn-primary btn-sm" @click="restartServer">重启服务器</button>
+				<button class="btn btn-primary btn-sm" @click="killProcess">销毁进程</button>
 			</div>
 		</div>
 	</div>
