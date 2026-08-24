@@ -103,6 +103,30 @@ function login() {
 	z-index: 9999;
 }
 
+.login-page::before {
+	content: "";
+	position: fixed;
+	top: 5%;
+	left: 8%;
+	width: 45%;
+	height: 45%;
+	background: radial-gradient(circle at 50% 50%, rgba(96,165,250,0.55) 0%, rgba(96,165,250,0.25) 35%, rgba(96,165,250,0.08) 55%, transparent 72%);
+	filter: blur(40px);
+	pointer-events: none;
+}
+
+.login-page::after {
+	content: "";
+	position: fixed;
+	bottom: 5%;
+	right: 8%;
+	width: 45%;
+	height: 45%;
+	background: radial-gradient(circle at 50% 50%, rgba(96,165,250,0.48) 0%, rgba(96,165,250,0.22) 35%, rgba(96,165,250,0.06) 55%, transparent 72%);
+	filter: blur(40px);
+	pointer-events: none;
+}
+
 .login-card {
 	width: 100%;
 	max-width: 340px;
