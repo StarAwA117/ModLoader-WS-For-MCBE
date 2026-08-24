@@ -143,7 +143,7 @@ function resizeImage(pixels, origWidth, origHeight, newWidth, newHeight) {
  */
 function ffmpegAvailable() {
 	try {
-		const r = spawnSync("ffmpeg", ["-version"], { stdio: "ignore", timeout: 5000 });
+		const r = spawnSync("ffmpeg", ["-version"], { stdio: "ignore", timeout: 5000, shell: true });
 		return !r.error && r.status === 0;
 	} catch {
 		return false;
@@ -187,11 +187,12 @@ function processImage(filePath, maxDim = MAX_IMAGE_DIM) {
 		}
 		const tmpPng = filePath + ".tmp_convert.png";
 		try {
-			execSync(`ffmpeg -y -i "${filePath}" "${tmpPng}"`, { timeout: 30000, stdio: ['ignore', 'ignore', 'pipe'] });
+			const r = spawnSync("ffmpeg", ["-y", "-i", filePath, tmpPng], { timeout: 30000, stdio: ['ignore', 'ignore', 'pipe'], shell: true });
+			if (r.error) throw r.error;
 			const converted = fs.readFileSync(tmpPng);
 			png = PNG.sync.read(converted);
 		} catch (e) {
-			const stderrText = decodeStderr(e.stderr);
+			const stderrText = e.stderr ? decodeStderr(e.stderr) : "";
 			throw new Error(`WEBP 转换失败: ${stderrText || e.message}`);
 		} finally {
 			try { fs.unlinkSync(tmpPng); } catch {}

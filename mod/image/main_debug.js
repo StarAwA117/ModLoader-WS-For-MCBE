@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { execSync } from "child_process";
+import { execSync, spawnSync } from "child_process";
 import { PNG } from "pngjs";
 // config 由 mods.js 注入 (this.config)
 import Command from "../../lib/command.js";
@@ -150,7 +150,8 @@ function processImage(filePath, maxDim = MAX_IMAGE_DIM) {
 		// JPEG - convert via ffmpeg
 		const tmpPng = filePath + ".tmp_convert.png";
 		try {
-			execSync(`ffmpeg -y -i "${filePath}" "${tmpPng}"`, { timeout: 30000, stdio: ['ignore', 'ignore', 'pipe'] });
+			const r = spawnSync("ffmpeg", ["-y", "-i", filePath, tmpPng], { timeout: 30000, stdio: ['ignore', 'ignore', 'pipe'] });
+			if (r.error) throw r.error;
 			const converted = fs.readFileSync(tmpPng);
 			png = PNG.sync.read(converted);
 		} catch (e) {
@@ -162,7 +163,8 @@ function processImage(filePath, maxDim = MAX_IMAGE_DIM) {
 		// WEBP - convert via ffmpeg
 		const tmpPng = filePath + ".tmp_convert.png";
 		try {
-			execSync(`ffmpeg -y -i "${filePath}" "${tmpPng}"`, { timeout: 30000, stdio: ['ignore', 'ignore', 'pipe'] });
+			const r = spawnSync("ffmpeg", ["-y", "-i", filePath, tmpPng], { timeout: 30000, stdio: ['ignore', 'ignore', 'pipe'] });
+			if (r.error) throw r.error;
 			const converted = fs.readFileSync(tmpPng);
 			png = PNG.sync.read(converted);
 		} catch (e) {

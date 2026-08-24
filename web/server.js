@@ -2,7 +2,7 @@ import http from "http";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
 import { promisify } from "util";
 import { fileURLToPath } from "url";
 import { config, reloadConfig, eventBus, ServerModManager, ClientModManager, modRegistry } from "../lib/mods.js";
@@ -13,6 +13,7 @@ import { logger } from "../lib/logger.js";
 import { collectCommands as collectTerminalCommands } from "../lib/readline.js";
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -129,11 +130,24 @@ const MIME_TYPES = {
 };
 
 function serveStatic(res, filePath) {
-	if (!fs.existsSync(filePath)) {
+	try {
+		const stat = fs.statSync(filePath);
+		if (!stat.isFile()) {
+			const indexPath = path.join(DIST_DIR, "index.html");
+			if (fs.existsSync(indexPath)) {
+				res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+				fs.createReadStream(indexPath).on("error", (e) => { res.destroy(e); }).pipe(res);
+			} else {
+				res.writeHead(404);
+				res.end("Not Found");
+			}
+			return;
+		}
+	} catch {
 		const indexPath = path.join(DIST_DIR, "index.html");
 		if (fs.existsSync(indexPath)) {
 			res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-			fs.createReadStream(indexPath).pipe(res);
+			fs.createReadStream(indexPath).on("error", (e) => { res.destroy(e); }).pipe(res);
 		} else {
 			res.writeHead(404);
 			res.end("Not Found");
@@ -143,7 +157,7 @@ function serveStatic(res, filePath) {
 	const ext = path.extname(filePath);
 	const mime = MIME_TYPES[ext] || "application/octet-stream";
 	res.writeHead(200, { "Content-Type": mime });
-	fs.createReadStream(filePath).pipe(res);
+	fs.createReadStream(filePath).on("error", (e) => { res.destroy(e); }).pipe(res);
 }
 
 async function handleAPI(req, res, url) {
@@ -519,7 +533,7 @@ async function handleAPI(req, res, url) {
 				if (!targetTag) throw new Error("无法获取最新版本标签");
 				await execAsync("git fetch --all", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
 				await execAsync("git reset --hard HEAD", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
-				await execAsync(`git checkout -f ${targetTag}`, { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
+				await execFileAsync("git", ["checkout", "-f", targetTag], { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
 				await execAsync("npm install", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024, timeout: 300000 });
 				json(res, { ok: true, message: "更新完成，正在退出进程，请手动重启服务。" });
 				setTimeout(() => process.exit(0), 2000);
@@ -538,7 +552,7 @@ async function handleAPI(req, res, url) {
 			try {
 				await execAsync("git fetch --all", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
 				await execAsync("git reset --hard HEAD", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
-				await execAsync(`git checkout -f ${targetTag}`, { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
+				await execFileAsync("git", ["checkout", "-f", targetTag], { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024 });
 				await execAsync("npm install", { cwd: REPO_ROOT, maxBuffer: 10 * 1024 * 1024, timeout: 300000 });
 				json(res, { ok: true, message: "回退完成，正在退出进程，请手动重启服务。" });
 				setTimeout(() => process.exit(0), 2000);
@@ -561,7 +575,7 @@ const server = http.createServer((req, res) => {
 		return;
 	}
 	let filePath = path.join(DIST_DIR, url.pathname);
-	if (filePath.endsWith("/")) filePath = path.join(filePath, "index.html");
+	if (filePath.endsWith("/") || filePath.endsWith(path.sep)) filePath = path.join(filePath, "index.html");
 	serveStatic(res, filePath);
 });
 

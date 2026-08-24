@@ -752,7 +752,7 @@ this.Command.create("l:fix", "修复被挖掉的方块 / 替换无法映射的�
 		this.page = page !== undefined ? parseInt(page) || 1 : 1;
 		const dir = this.config.basePath;
 		const files = fs.existsSync(dir)
-			? fs.readdirSync(dir).filter(f => f.endsWith(".litematic")).sort()
+			? fs.readdirSync(dir).filter(f => f.toLowerCase().endsWith(".litematic")).sort()
 			: [];
 		this.pageList(sender, files, "§eLitematic | §fList");
 	}
@@ -761,7 +761,7 @@ this.Command.create("l:fix", "修复被挖掉的方块 / 替换无法映射的�
 		this.page = page !== undefined ? parseInt(page) || 1 : 1;
 		const dir = this.config.basePath;
 		const files = fs.existsSync(dir)
-			? fs.readdirSync(dir).filter(f => f.endsWith(".litematic") && f.toLowerCase().includes(keyword.toLowerCase())).sort()
+			? fs.readdirSync(dir).filter(f => f.toLowerCase().endsWith(".litematic") && f.toLowerCase().includes(keyword.toLowerCase())).sort()
 			: [];
 		this.pageList(sender, files, `§eLitematic | §fSearch > §i"${keyword}"`);
 	}
