@@ -1,6 +1,6 @@
 [English](./README_EN.md) | 简体中文
 
-# ModLoader
+# MCWSLoader
 
 Minecraft 基岩版 WebSocket 桥接服务器。通过游戏内置 WebSocket API 连接客户端，以 Mod 方式注入命令与自动化能力。
 

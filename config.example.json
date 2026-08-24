@@ -1,6 +1,6 @@
 {
 	"ws": {
-		"name": "ModLoader",
+		"name": "MCWSLoader",
 		"port": 8080
 	},
 	"web": {

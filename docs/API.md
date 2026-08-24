@@ -1,6 +1,6 @@
 # API Reference
 
-ModLoader exposes several programmatic APIs for Mod development and a REST API for the WebUI.
+MCWSLoader exposes several programmatic APIs for Mod development and a REST API for the WebUI.
 
 ---
 
@@ -129,9 +129,10 @@ class MyServerMod {
 	onStart() { /* called on load */ }
 	onDestroy() { /* called on unload */ }
 	onClientConnect(client, isMainClient) { /* new client connected */ }
+	onClientDisconnect(client, isMainClient) { /* client disconnected */ }
 	onMainClientConnect(client) { /* main client connected */ }
 	onMainClientDisconnect() { /* main client disconnected */ }
-	onClientDestroy(client, wasMainClient) { /* client disconnected */ }
+	onMainClientSwitch(oldClient, newClient) { /* main client switched */ }
 	onMessage(client, data) { /* raw WebSocket message from any client */ }
 }
 ```
@@ -273,6 +274,7 @@ REST API served by the WebUI backend. All endpoints require `X-Auth-Token` heade
 |--------|----------|-------------|
 | `GET` | `/api/permissions` | Get full permission config |
 | `PUT` | `/api/permissions` | Overwrite permission config |
+| `POST` | `/api/permissions/:group/:player` | Add player to group (`owner`, `op`, `user`, `blocker`) |
 | `DELETE` | `/api/permissions/:group/:player` | Remove player from group |
 
 ### Mods
@@ -281,6 +283,13 @@ REST API served by the WebUI backend. All endpoints require `X-Auth-Token` heade
 |--------|----------|-------------|
 | `GET` | `/api/mods` | List all loaded Mods |
 | `POST` | `/api/mods/reload-all` | Reload config + all Mods |
+| `POST` | `/api/mods/:name/enable` | Enable a Mod |
+| `POST` | `/api/mods/:name/disable` | Disable a Mod |
+| `POST` | `/api/mods/:name/reload` | Reload a single Mod |
+| `GET` | `/api/mods/:name/config` | Get Mod config |
+| `PUT` | `/api/mods/:name/config` | Save Mod config |
+| `GET` | `/api/mods/:name/manifest` | Get Mod manifest |
+| `GET` | `/api/mods/:name/readme` | Get Mod README |
 
 ### Commands
 
@@ -296,6 +305,7 @@ REST API served by the WebUI backend. All endpoints require `X-Auth-Token` heade
 | `GET` | `/api/clients` | List connected clients (includes `localPlayerName`) |
 | `POST` | `/api/clients/:id/tell` | Send tell to a client (`{ message }`) |
 | `POST` | `/api/clients/:id/set-main` | Set a client as main |
+| `POST` | `/api/clients/:id/disconnect` | Disconnect a client |
 
 ### Logs
 
@@ -316,3 +326,14 @@ REST API served by the WebUI backend. All endpoints require `X-Auth-Token` heade
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/system/process` | Node.js process info (pid, memory, uptime) |
+| `POST` | `/api/system/kill` | Kill the server process |
+| `POST` | `/api/system/restart` | Gracefully restart the server |
+
+### Update
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/update/check` | Check for latest version on GitHub |
+| `GET` | `/api/update/tags` | List available release versions |
+| `POST` | `/api/update/do` | Update to latest version |
+| `POST` | `/api/update/rollback` | Rollback to a specific version (`{ tag }`) |

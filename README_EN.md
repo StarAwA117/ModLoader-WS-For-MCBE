@@ -1,6 +1,6 @@
 English | [简体中文](./README.md)
 
-# ModLoader
+# MCWSLoader
 
 Minecraft Bedrock Edition WebSocket bridge server. Connects clients via the built-in WebSocket API and injects commands and automation through a Mod system.
 

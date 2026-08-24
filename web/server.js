@@ -27,7 +27,7 @@ const AUTH_MAX_ATTEMPTS = authConfig.maxAttempts || 3;
 const AUTH_WINDOW_MS = authConfig.windowMs || 60000;
 const AUTH_LOCKOUT_MS = authConfig.lockoutMs || 60000;
 
-const GITHUB_API = "https://api.github.com/repos/StarAwA117/ModLoader-WS-For-MCBE";
+const GITHUB_API = "https://api.github.com/repos/StarAwA117/MCWSLoader";
 const REPO_ROOT = path.resolve(__dirname, "..");
 const CURRENT_VERSION = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf-8")).version;
 
@@ -530,7 +530,7 @@ async function handleAPI(req, res, url) {
 		// Update
 		async function githubFetch(apiPath) {
 			const res = await fetch(`${GITHUB_API}${apiPath}`, {
-				headers: { "Accept": "application/vnd.github+json", "User-Agent": "ModLoader-UpdateChecker" }
+				headers: { "Accept": "application/vnd.github+json", "User-Agent": "MCWSLoader-UpdateChecker" }
 			});
 			if (!res.ok) throw new Error(`GitHub API 请求失败: HTTP ${res.status}`);
 			return res.json();

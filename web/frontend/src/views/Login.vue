@@ -68,7 +68,7 @@ function login() {
 		<div class="login-card">
 			<div class="login-header">
 				<div class="login-bar"></div>
-				<h1>ModLoader</h1>
+				<h1>MCWSLoader</h1>
 			</div>
 			<p class="login-desc">WebUI 登录</p>
 			<div class="form-group">

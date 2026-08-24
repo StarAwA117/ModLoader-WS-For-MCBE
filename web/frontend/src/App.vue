@@ -87,7 +87,7 @@ watch(sidebarOpen, (v) => {
 			<div class="sidebar-header">
 				<div class="sidebar-title">
 					<span class="sidebar-title-bar"></span>
-					<h1>ModLoader</h1>
+					<h1>MCWSLoader</h1>
 				</div>
 				<button class="sidebar-close" @click="sidebarOpen = false">
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
