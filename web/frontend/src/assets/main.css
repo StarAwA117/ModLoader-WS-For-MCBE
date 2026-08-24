@@ -69,7 +69,7 @@ body::after {
 	-webkit-tap-highlight-color: transparent;
 }
 
-.sidebar-overlay.open { display: block; }
+.sidebar-overlay.open { display: block; animation: fadeIn 0.2s ease-out; }
 
 /* ===== Sidebar (drawer) ===== */
 .sidebar {
@@ -213,6 +213,7 @@ body::after {
 	color: var(--primary);
 	border-left-color: var(--primary);
 	font-weight: 600;
+	animation: slideDown 0.15s ease-out;
 }
 
 .nav-icon {
@@ -241,6 +242,7 @@ body::after {
 	padding: 20px;
 	margin-bottom: 16px;
 	box-shadow: var(--shadow);
+	animation: slideUp 0.25s ease-out;
 }
 
 .card-header {
@@ -261,6 +263,7 @@ body::after {
 	font-weight: 500;
 	background: var(--primary-dim);
 	color: var(--primary);
+	animation: scaleIn 0.2s ease-out;
 }
 
 /* ===== Stats ===== */
@@ -277,7 +280,10 @@ body::after {
 	border-radius: var(--radius);
 	padding: 16px;
 	box-shadow: var(--shadow);
+	animation: slideUp 0.25s ease-out;
+	transition: transform 0.15s, box-shadow 0.15s;
 }
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 
 .stat-card .label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
 .stat-card .value { font-size: 22px; font-weight: 700; color: var(--text); }
@@ -327,6 +333,7 @@ textarea { min-height: 80px; resize: vertical; font-family: "Cascadia Code", "Fi
 	transition: all 0.12s;
 	font-family: inherit;
 }
+.btn:active { transform: scale(0.96); }
 
 .btn-primary { background: var(--primary); color: #ffffff; }
 .btn-primary:hover { background: var(--primary-hover); }
@@ -367,7 +374,8 @@ tr:hover td { background: var(--primary-glow); }
 .log-line.input { color: #64748b; }
 
 /* ===== Tags ===== */
-.tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; transition: transform 0.1s; }
+.tag:hover { transform: scale(1.05); }
 .tag-owner { background: var(--primary-dim); color: var(--primary); }
 .tag-op { background: rgba(71,85,105,0.1); color: #475569; }
 .tag-user { background: rgba(71,85,105,0.07); color: #64748b; }
@@ -388,7 +396,7 @@ body.modal-open { overflow: hidden; }
 .modal {
 	background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
 	width: 90%; max-width: 520px; max-height: 80vh; display: flex; flex-direction: column;
-	box-shadow: 0 8px 32px rgba(0,0,0,0.12); animation: slideUp 0.2s;
+	box-shadow: 0 8px 32px rgba(0,0,0,0.12); animation: scaleIn 0.2s ease-out;
 	overflow: hidden;
 }
 .modal-header {
@@ -429,6 +437,8 @@ body.modal-open { overflow: hidden; }
 .modal-markdown li { margin: 2px 0; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
