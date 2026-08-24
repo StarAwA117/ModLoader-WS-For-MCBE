@@ -9,7 +9,9 @@ const groupNames = { owner: "服主", op: "管理员", user: "普通用户", blo
 const groupColors = { owner: "tag-owner", op: "tag-op", user: "tag-user", blocker: "tag-blocker" };
 
 async function refresh() {
-	permissions.value = await api.getPermissions();
+	const data = await api.getPermissions();
+	permissions.value = data;
+	newPlayer.value.owner = data.owner || "";
 }
 
 async function addPlayer(group) {
@@ -43,8 +45,15 @@ onMounted(refresh);
 			</span>
 		</div>
 
-		<div v-if="group === 'owner'" style="color: var(--text-secondary); font-size: 14px;">
-			{{ permissions.owner || "未设置" }}
+		<div v-if="group === 'owner'" style="display: flex; gap: 8px;">
+			<input
+				v-model="newPlayer[group]"
+				type="text"
+				placeholder="输入玩家名设为服主"
+				@keydown.enter="addPlayer(group)"
+				style="flex: 1; min-width: 0;"
+			/>
+			<button class="btn btn-primary btn-sm" @click="addPlayer(group)">设置</button>
 		</div>
 
 		<template v-else>
@@ -54,8 +63,9 @@ onMounted(refresh);
 					type="text"
 					:placeholder="'输入玩家名添加到' + groupNames[group]"
 					@keydown.enter="addPlayer(group)"
+					style="flex: 1; min-width: 0;"
 				/>
-				<button class="btn btn-success btn-sm" @click="addPlayer(group)">添加</button>
+				<button class="btn btn-primary btn-sm" @click="addPlayer(group)">添加</button>
 			</div>
 
 			<div v-if="!permissions[group]?.length" style="color: var(--text-muted); font-size: 13px; padding: 8px 0;">
